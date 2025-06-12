@@ -1,86 +1,124 @@
-import { Fragment, useEffect } from "react";
+// src/pages/cart/Cart.jsx
+import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteCartItem, fetchCartItems, updateCartQuantity } from "../../redux/slices/cartSlices";
+import {
+    deleteCartItem,
+    fetchCartItems,
+    updateCartQuantity,
+} from "../../redux/slices/cartSlices";
 import { toast } from "react-toastify";
 import { Delete, RemoveShoppingCart } from "@mui/icons-material";
 import { Typography } from "@mui/material";
 import { Helmet } from "react-helmet-async";
 
-const Cart = () => {
+export default function Cart() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { user } = useSelector((state) => state.user);
-    const { cartItems = [] } = useSelector((state) => state.shopCart);
+    const { user } = useSelector((s) => s.user);
+    const { cartItems = [] } = useSelector((s) => s.shopCart);
 
+    // Local state for optimistic quantity updates
+    const [quantities, setQuantities] = useState({});
+
+    // Fetch cart items when user logs in or changes
     useEffect(() => {
-        if (user) {
-            dispatch(fetchCartItems(user._id));
-        }
+        if (user) dispatch(fetchCartItems(user._id));
     }, [dispatch, user]);
 
-    const handleQuantityChange = async (productId, sizes, seamSizes, colorName, newQuantity) => {
-        if (newQuantity < 1) {
-            toast.error("Quantity must be at least 1");
-            return;
-        }
+    // Initialize local quantities when cartItems load
+    useEffect(() => {
+        const init = {};
+        cartItems.forEach((item) => {
+            init[`${item.productId}_${item.selectedColorName}`] = item.quantity;
+        });
+        setQuantities(init);
+    }, [cartItems]);
+
+    // Unified handler for +/- buttons
+    const handleQtyChange = async (productId, colorName, delta) => {
+        const key = `${productId}_${colorName}`;
+        const oldQty = quantities[key] ?? 1;
+        const newQty = Math.max(1, oldQty + delta);
+
+        // Optimistically update UI
+        setQuantities((q) => ({ ...q, [key]: newQty }));
+
         try {
-            await dispatch(updateCartQuantity({
-                userId: user._id,
-                productId,
-                quantity: newQuantity,
-                sizes: sizes || null,
-                seamSizes: seamSizes || null,
-                colorName,
-            })).unwrap();
+            await dispatch(
+                updateCartQuantity({
+                    userId: user._id,
+                    productId,
+                    quantity: newQty,
+                    colorName,
+                })
+            ).unwrap();
             toast.success("Quantity updated!");
             dispatch(fetchCartItems(user._id));
-        } catch (error) {
-            toast.error(error.message || "Failed to update quantity");
+        } catch (err) {
+            toast.error(err.message || "Failed to update quantity");
+            // Roll back UI
+            setQuantities((q) => ({ ...q, [key]: oldQty }));
         }
     };
 
-    const handleRemoveItem = async (productId, sizes, seamSizes, colorName) => {
-        if (!productId || !colorName) {
-            console.warn("Missing required parameters for deletion");
-            return;
-        }
+    // Handler for direct number input
+    const handleQtyInput = (productId, colorName, value) => {
+        const key = `${productId}_${colorName}`;
+        const oldQty = quantities[key] ?? 1;
+        const parsed = parseInt(value, 10);
+        const val = isNaN(parsed) ? oldQty : Math.max(1, parsed);
+        handleQtyChange(productId, colorName, val - oldQty);
+    };
+
+    // Remove item
+    const handleRemoveItem = async (productId, colorName) => {
         try {
-            await dispatch(deleteCartItem({ userId: user._id, productId, sizes, seamSizes, colorName })).unwrap();
-            toast.success("Item removed from cart successfully!");
+            await dispatch(
+                deleteCartItem({ userId: user._id, productId, colorName })
+            ).unwrap();
+            toast.success("Item removed!");
             dispatch(fetchCartItems(user._id));
-        } catch (error) {
-            toast.error(error || "Failed to delete item");
+        } catch (err) {
+            toast.error(err.message || "Failed to remove item");
         }
     };
 
+    // Checkout navigation
     const checkout = () => {
         navigate("/checkout-user", { state: { cartItems } });
     };
 
-    const subtotal = cartItems.reduce((acc, item) => (item.price ? acc + item.price * item.quantity : acc), 0);
+    // Totals
+    const subtotal = cartItems.reduce(
+        (sum, i) => sum + (i.price || 0) * i.quantity,
+        0
+    );
     const tax = subtotal * 0.07;
     const total = subtotal + tax;
 
-    const navigateLink = (id) => {
-        window.scrollTo(0, 0);
-        navigate(`/product-details/${id}`);
-    };
-
-
-
-    const pageTitle = 'Your Shopping Cart | Your Store';
+    // SEO & breadcrumb schema
+    const pageTitle = "Shopping Cart | Bloodbuck";
     const pageDescription = cartItems.length
-        ? `You have ${cartItems.length} item(s) in your cart. Review your items, update quantities, or proceed to checkout.`
-        : 'Your cart is empty. Browse products to add items to your cart.';
+        ? `You have ${cartItems.length} item(s) in your cart.`
+        : "Your cart is empty.";
     const pageUrl = window.location.href;
-
     const breadcrumbSchema = {
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
         itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: window.location.origin + '/' },
-            { '@type': 'ListItem', position: 2, name: 'Cart', item: pageUrl },
+            {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: window.location.origin + "/",
+            },
+            {
+                "@type": "ListItem",
+                position: 2,
+                name: "Cart",
+                item: pageUrl,
+            },
         ],
     };
 
@@ -90,93 +128,184 @@ const Cart = () => {
                 <title>{pageTitle}</title>
                 <meta name="description" content={pageDescription} />
                 <link rel="canonical" href={pageUrl} />
-                <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+                <script type="application/ld+json">
+                    {JSON.stringify(breadcrumbSchema)}
+                </script>
             </Helmet>
 
-            <section className="cart-page">
-                {cartItems.length === 0 ? (
-                    <div className="emptyCart">
-                        <RemoveShoppingCart />
-                        <Typography>No Product in Your Cart</Typography>
-                        <Link to="/products">View Products</Link>
-                    </div>
-                ) : (
-                    <div className="cart-container">
-                        <h1 className="cart-heading">Your Shopping Cart ({cartItems.length} Items)</h1>
-                        <div className="cart-content">
-                            <div className="cart-items">
-                                {cartItems.map((item, index) => (
-                                    <div className="cart-item" key={`${item.productId}-${String(item.selectedSize) || 'noSize'}-${String(item.selectedSeamSize) || 'noSeamSize'}-${index}`}>
-                                        <div className="item-image" onClick={() => navigateLink(item.productId)}>
-                                            <img src={item.imageUrl} alt={item.name} />
-                                        </div>
-                                        <div className="item-info">
-                                            <div className="item-details">
-                                                <div className="item-controls">
-                                                    <h3 className="item-title">{item.name}</h3>
-                                                    <button className="remove-btn" onClick={() => handleRemoveItem(item.productId, item.selectedSize, item.selectedSeamSize, item.selectedColorName)}>
+            <section className="bg-gray-50 py-32 px-4 md:px-8 lg:px-16">
+                <div className="max-w-7xl mx-auto">
+                    {/* Breadcrumb */}
+                    <nav
+                        className="text-sm text-gray-600 mb-6"
+                        aria-label="Breadcrumb"
+                    >
+                        <ol className="inline-flex list-none p-0">
+                            <li className="flex items-center">
+                                <Link to="/" className="hover:text-gray-800">
+                                    Home
+                                </Link>
+                                <span className="mx-2">/</span>
+                            </li>
+                            <li className="flex items-center text-gray-500">
+                                <span>Cart</span>
+                            </li>
+                        </ol>
+                    </nav>
+
+                    {/* Empty state */}
+                    {cartItems.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <RemoveShoppingCart className="text-gray-400 text-6xl mb-4" />
+                            <Typography className="text-xl font-medium text-gray-700 mb-2">
+                                Your cart is empty
+                            </Typography>
+                            <Link
+                                to="/products"
+                                className="mt-4 inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md transition"
+                            >
+                                Shop Now
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            {/* Left: Cart Items */}
+                            <div className="lg:col-span-2 space-y-6">
+                                <h2 className="text-2xl font-semibold text-gray-800">
+                                    Shopping Cart ({cartItems.length})
+                                </h2>
+
+                                {cartItems.map((item, idx) => {
+                                    const key = `${item.productId}_${item.selectedColorName}`;
+                                    const qty = quantities[key] ?? item.quantity;
+
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="flex flex-col md:flex-row items-center md:items-start bg-white rounded-lg shadow p-6"
+                                        >
+                                            {/* Image */}
+                                            <img
+                                                src={item.imageUrl}
+                                                alt={item.name}
+                                                onClick={() =>
+                                                    navigate(`/product-details/${item.productId}`)
+                                                }
+                                                className="w-full md:w-32 h-32 object-cover rounded-lg cursor-pointer"
+                                            />
+
+                                            {/* Info */}
+                                            <div className="flex-1 md:ml-6 mt-4 md:mt-0 w-full flex flex-col justify-between">
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="text-lg font-medium text-gray-800">
+                                                        {item.name}
+                                                    </h3>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleRemoveItem(
+                                                                item.productId,
+                                                                item.selectedColorName
+                                                            )
+                                                        }
+                                                        className="text-gray-400 hover:text-red-600"
+                                                    >
                                                         <Delete />
                                                     </button>
                                                 </div>
-                                                <div className="quantity-control">
-                                                    <div className="quantity-buttons">
-                                                        <button className="quantity-btn" onClick={() => handleQuantityChange(item.productId, item.selectedSize, item.selectedSeamSize, item.selectedColorName, item.quantity - 1)}>
-                                                            −
-                                                        </button>
-                                                        <input type="number" value={item.quantity} readOnly />
-                                                        <button className="quantity-btn" onClick={() => handleQuantityChange(item.productId, item.selectedSize, item.selectedSeamSize, item.selectedColorName, item.quantity + 1)}>
-                                                            +
-                                                        </button>
-                                                    </div>
-                                                    <p className="item-price">${item.price?.toFixed(2)}</p>
+
+                                                <p className="mt-2 text-gray-600">
+                                                    Color:{" "}
+                                                    <span className="font-medium">
+                                                        {item.selectedColorName}
+                                                    </span>
+                                                </p>
+
+                                                {/* Quantity Controls */}
+                                                <div className="mt-4 flex items-center space-x-4">
+                                                    <button
+                                                        onClick={() =>
+                                                            handleQtyChange(
+                                                                item.productId,
+                                                                item.selectedColorName,
+                                                                -1
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={qty}
+                                                        onChange={(e) =>
+                                                            handleQtyInput(
+                                                                item.productId,
+                                                                item.selectedColorName,
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        className="w-12 text-center border rounded"
+                                                    />
+                                                    <button
+                                                        onClick={() =>
+                                                            handleQtyChange(
+                                                                item.productId,
+                                                                item.selectedColorName,
+                                                                1
+                                                            )
+                                                        }
+                                                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                                                    >
+                                                        +
+                                                    </button>
                                                 </div>
-                                                {item.selectedSize && <p className="item-variant">Size (Top): {item.selectedSize}</p>}
-                                                {item.selectedSeamSize && <p className="item-variant">Seam Size (Bottom): {item.selectedSeamSize}</p>}
-                                                <p className="item-variant">Color: {item.selectedColorName}</p>
+
+                                                <p className="mt-4 text-lg font-semibold text-red-600">
+                                                    ₹{(item.price * qty).toFixed(2)}
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
-                            <div className="order-summary">
-                                <h2 className="summary-heading">Order Summary</h2>
-                                <div className="summary-details">
-                                    <div className="summary-row">
-                                        <span>Subtotal ({cartItems.length} Items)</span>
-                                        <span>${subtotal?.toFixed(2)}</span>
+
+                            {/* Right: Sticky Order Summary */}
+                            <aside className="space-y-6 lg:col-span-1 lg:self-start lg:sticky lg:top-24">
+                                <h3 className="text-xl font-semibold text-gray-800">
+                                    Order Summary
+                                </h3>
+                                <div className="bg-white rounded-lg shadow p-6 space-y-4">
+                                    <div className="flex justify-between">
+                                        <span>Subtotal</span>
+                                        <span className="font-medium">
+                                            ₹{subtotal.toFixed(2)}
+                                        </span>
                                     </div>
-                                    <div className="summary-row">
+                                    <div className="flex justify-between">
                                         <span>Shipping</span>
-                                        <span className="free-shipping">FREE</span>
+                                        <span className="font-medium text-green-600">FREE</span>
                                     </div>
-                                    <div className="summary-row">
-                                        <span>Estimated Tax</span>
-                                        <span>${tax?.toFixed(2)}</span>
+                                    <div className="flex justify-between">
+                                        <span>Tax</span>
+                                        <span className="font-medium">₹{tax.toFixed(2)}</span>
                                     </div>
-                                    <div className="summary-total">
+                                    <div className="flex justify-between border-t pt-2 text-lg font-semibold">
                                         <span>Total</span>
-                                        <span>${total?.toFixed(2)}</span>
+                                        <span>₹{total.toFixed(2)}</span>
                                     </div>
+                                    <button
+                                        onClick={checkout}
+                                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-md transition"
+                                    >
+                                        Proceed to Checkout
+                                    </button>
                                 </div>
-                                <button className="checkout-btn" onClick={checkout}>
-                                    Proceed to Checkout
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
-                                        <path d="M17 12h-4v4h-2v-4H7v-2h4V6h2v4h4z" />
-                                    </svg>
-                                </button>
-                                <div className="secure-checkout">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
-                                    </svg>
-                                    <span>Secure SSL Encryption</span>
-                                </div>
-                            </div>
+                            </aside>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </section>
         </Fragment>
     );
-};
-
-export default Cart;
+}

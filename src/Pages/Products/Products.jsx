@@ -1,74 +1,40 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Add, Remove } from "@mui/icons-material";
-import ProductCard from "./ProductCard";
+import { Skeleton, Stack } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../../redux/slices/productSlices";
 import { fetchCategories } from "../../redux/slices/categorySlices";
 import { useSearchParams } from "react-router-dom";
-import { Skeleton, Stack } from "@mui/material";
 import { Helmet } from "react-helmet-async";
+import ProductCard from "./ProductCard";
 
 const Products = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
-
-
-  // Initialize filters with keyword and category from the URL
-  const initialFilters = {
+  const [filters, setFilters] = useState({
     keyword: searchParams.get("keyword") || "",
     category: searchParams.get("category") ? [searchParams.get("category")] : [],
     color: [],
     priceRange: [0, 1000],
     sort: "",
-  };
-
-  const [filters, setFilters] = useState(initialFilters);
+  });
+  const [filterUI, setFilterUI] = useState({ category: true, color: false, price: false });
 
   const { products, loading: prodLoading } = useSelector((state) => state.products);
-  console.log(products);
+  const { categories, loading: catLoading } = useSelector((state) => state.categories);
 
-
-  const { categories, loading: catLoading } = useSelector(
-    (state) => state.categories
-  );
-
-
-
-  // Compute unique filter options from fetched products
+  // derive color options
   const { colorOptions } = useMemo(() => {
-    const colorMap = {};
-
-
+    const map = {};
     products.forEach((prod) => {
-      prod.colors?.forEach((color) => {
-        const name = color.colorName;
-        const url = color.colorImage?.url || color.photos?.[0]?.url || "";
-        if (name && !colorMap[name]) {
-          colorMap[name] = url;
+      prod.colors?.forEach((col) => {
+        if (col.colorName && !map[col.colorName]) {
+          map[col.colorName] = col.colorImage?.url || col.photos?.[0]?.url || "";
         }
-
       });
     });
-
-    return {
-      colorOptions: Object.entries(colorMap).map(([name, url]) => ({
-        name,
-        url,
-      })),
-    };
+    return { colorOptions: Object.entries(map).map(([name, url]) => ({ name, url })) };
   }, [products]);
-
-
-
-
-  const getDefaultFilterUI = (isMobile) => ({
-    category: !isMobile,
-    color: false,
-    price: false,
-  });
-
-  const [filterUI, setFilterUI] = useState(getDefaultFilterUI(window.innerWidth <= 768));
-
 
   useEffect(() => {
     dispatch(fetchProducts(filters));
@@ -78,242 +44,167 @@ const Products = () => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
+  const toggleGroup = (key) => setFilterUI((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  useEffect(() => {
-    const onResize = () => {
-      const isMobile = window.innerWidth <= 768;
-      setFilterUI(getDefaultFilterUI(isMobile));
-    };
-    window.addEventListener("resize", onResize);
-    // run once on mount
-    onResize();
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  // UI toggles for filter groups (collapse/expand)
-  // const [filterUI, setFilterUI] = useState({
-  //   category: true,
-  //   sizeAlphabet: true,
-  //   sizeNumber: false,
-  //   color: false,
-  //   price: false,
-  // });
-
-
-
-  // Fetch categories for filters and lookup
-
-
-  // Toggle UI collapse/expand for filter groups
-  const toggleFilterUI = (key) => {
-    setFilterUI((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  // Generic handler for checkbox changes (multi-select filters)
-  const handleCheckboxChange = (e, filterKey) => {
+  const handleCheckbox = (e, key) => {
     const { value, checked } = e.target;
     setFilters((prev) => {
-      let updated = prev[filterKey] || [];
-      if (checked) {
-        updated = [...updated, value];
-      } else {
-        updated = updated.filter((item) => item !== value);
-      }
-      return { ...prev, [filterKey]: updated };
+      const setVals = new Set(prev[key]);
+      checked ? setVals.add(value) : setVals.delete(value);
+      return { ...prev, [key]: Array.from(setVals) };
     });
   };
 
-  // Handler for price range slider changes
-  const handlePriceChange = (e) => {
-    const value = Number(e.target.value);
-    setFilters((prev) => ({
-      ...prev,
-      priceRange: [prev.priceRange[0], value],
-    }));
+  const handlePrice = (e) => {
+    setFilters((prev) => ({ ...prev, priceRange: [prev.priceRange[0], +e.target.value] }));
   };
 
-  // Handler for sort selection changes
-  const handleSortChange = (e) => {
-    setFilters((prev) => ({ ...prev, sort: e.target.value }));
-  };
-
-
-
-
-
-  const siteTitle = 'Our Products – Your Store';
-  const siteDescription =
-    'Browse our collection of products, filter by category, size, color, price, and more.';
-  const siteUrl = window.location.origin + window.location.pathname;
-
-  const structuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: siteTitle,
-    url: siteUrl,
-    description: siteDescription,
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: window.location.origin + '/' },
-        { '@type': 'ListItem', position: 2, name: 'Products', item: siteUrl },
-      ],
-    },
-  };
+  const handleSort = (e) => setFilters((prev) => ({ ...prev, sort: e.target.value }));
 
   return (
     <>
       <Helmet>
-        <title>{siteTitle}</title>
-        <meta name="description" content={siteDescription} />
-        <meta name="keywords" content="products, shopping, filters, categories" />
-        <link rel="canonical" href={siteUrl} />
-        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <title>Our Products – Your Store</title>
+        <meta name="description" content="Browse our products with advanced filters." />
+        <link rel="canonical" href={window.location.href} />
       </Helmet>
-      <section className="products-section">
-        <div className="container">
-          {/* Filter Sidebar */}
-          <aside className="filter-sidebar">
-            <h2>Filters</h2>
 
-            {/* Category Filter */}
-            <div className="filter-group">
-              <h3 onClick={() => toggleFilterUI("category")}>
-                Category {filterUI.category ? <Remove /> : <Add />}
-              </h3>
-              {filterUI.category && (
-                <ul className="filter-options">
-                  {catLoading ? (
-                    <>
-                      <Skeleton />
-                      <Skeleton />
-                    </>
-                  ) : (
-                    categories.map((cat) => (
-                      <label key={cat._id}>
-                        <input
-                          type="checkbox"
-                          value={cat._id}
-                          onChange={(e) => handleCheckboxChange(e, "category")}
-                          // Check if this category is already selected
-                          checked={filters.category.includes(cat._id)}
-                        />{" "}
-                        {cat.name}
-                      </label>
-                    ))
-                  )}
-                </ul>
-              )}
-            </div>
+      <section className="bg-gray-50 pt-24 md:pt-32 pb-16">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row md:space-x-6">
 
-            {/* Color Filter */}
-            <div className="filter-group">
-              <h3 onClick={() => toggleFilterUI("color")}>
-                Color {filterUI.color ? <Remove /> : <Add />}
-              </h3>
-              {filterUI.color && (
-                <div className="filter-options colors">
-                  {colorOptions.length === 0 ? (
-                    <p>No colors available</p>
-                  ) : (
-                    colorOptions.map((col) => (
-                      <label
-                        key={col.name}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={col.name}
-                          onChange={(e) => handleCheckboxChange(e, "color")}
-                          checked={filters.color.includes(col.name)}
-                        />
-                        <img
-                          src={col.url}
-                          alt={col.name}
-                          style={{
-                            width: "20px",
-                            height: "20px",
-                            objectFit: "cover",
-                            borderRadius: "4px",
-                          }}
-                        />
-                        <span>{col.name}</span>
-                      </label>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Sidebar - always visible */}
+          <aside className="w-full md:w-1/4 lg:w-1/5 mb-6 md:mb-0">
+            <div className="bg-white p-6 rounded-lg shadow sticky top-20">
+              <h2 className="text-xl font-semibold mb-4">Filters</h2>
 
-            {/* Price Filter */}
-            <div className="filter-group">
-              <h3 onClick={() => toggleFilterUI("price")}>
-                Price {filterUI.price ? <Remove /> : <Add />}
-              </h3>
-              {filterUI.price && (
-                <div className="price-range">
-                  <input
-                    type="range"
-                    min="0"
-                    max="1000"
-                    value={filters.priceRange[1]}
-                    onChange={handlePriceChange}
-                  />
-                  <div className="price-values">
-                    <span>${filters.priceRange[0]}</span>
-                    <span>${filters.priceRange[1]}</span>
+              {/* Category */}
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleGroup("category")}
+                  className="w-full flex justify-between items-center text-gray-800 font-medium mb-2"
+                >
+                  Category {filterUI.category ? <Remove /> : <Add />}
+                </button>
+                {filterUI.category && (
+                  <ul className="space-y-2">
+                    {catLoading
+                      ? [1, 2].map((i) => <Skeleton key={i} height={24} />)
+                      : categories.map((cat) => (
+                        <label key={cat._id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            value={cat._id}
+                            checked={filters.category.includes(cat._id)}
+                            onChange={(e) => handleCheckbox(e, "category")}
+                            className="form-checkbox h-4 w-4 text-blue-600"
+                          />
+                          <span className="text-gray-700">{cat.name}</span>
+                        </label>
+                      ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Color */}
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleGroup("color")}
+                  className="w-full flex justify-between items-center text-gray-800 font-medium mb-2"
+                >
+                  Color {filterUI.color ? <Remove /> : <Add />}
+                </button>
+                {filterUI.color && (
+                  <ul className="space-y-2">
+                    {colorOptions.length === 0 ? (
+                      <p className="text-gray-500">No colors</p>
+                    ) : (
+                      colorOptions.map((col) => (
+                        <label key={col.name} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            value={col.name}
+                            checked={filters.color.includes(col.name)}
+                            onChange={(e) => handleCheckbox(e, "color")}
+                            className="form-checkbox h-4 w-4 text-blue-600"
+                          />
+                          <div
+                            className="w-5 h-5 rounded-full border"
+                            style={{ backgroundImage: `url(${col.url})`, backgroundSize: 'cover' }}
+                          />
+                          <span className="text-gray-700">{col.name}</span>
+                        </label>
+                      ))
+                    )}
+                  </ul>
+                )}
+              </div>
+
+              {/* Price */}
+              <div>
+                <button
+                  onClick={() => toggleGroup("price")}
+                  className="w-full flex justify-between items-center text-gray-800 font-medium mb-2"
+                >
+                  Price {filterUI.price ? <Remove /> : <Add />}
+                </button>
+                {filterUI.price && (
+                  <div className="space-y-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1000"
+                      value={filters.priceRange[1]}
+                      onChange={handlePrice}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>${filters.priceRange[0]}</span>
+                      <span>${filters.priceRange[1]}</span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </aside>
 
-          {/* Products and Sort */}
-          <div className="products-section-main">
-            <div className="sort-bar">
-              <h3>All Items</h3>
-              <label>Sort by:</label>
-              <select onChange={handleSortChange} value={filters.sort}>
-                <option value="">Featured</option>
-                <option value="createdAt">New Arrivals</option>
-                <option value="averageRating">Top Rated</option>
-                <option value="-price">Price: High to Low</option>
-                <option value="price">Price: Low to High</option>
-              </select>
+          {/* Main Content */}
+          <div className="w-full md:w-3/4 lg:w-4/5">
+            {/* Sort Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 px-2 md:px-0">
+              <h3 className="text-lg font-semibold mb-2 sm:mb-0">All Items</h3>
+              <div className="flex items-center space-x-2">
+                <label htmlFor="sort" className="text-gray-700">Sort by:</label>
+                <select
+                  id="sort"
+                  value={filters.sort}
+                  onChange={handleSort}
+                  className="form-select block w-40 border-gray-300 rounded-md"
+                >
+                  <option value="">Featured</option>
+                  <option value="createdAt">New Arrivals</option>
+                  <option value="averageRating">Top Rated</option>
+                  <option value="-price">Price: High to Low</option>
+                  <option value="price">Price: Low to High</option>
+                </select>
+              </div>
             </div>
 
-            <div className="products-grid">
-              {prodLoading ? (
-                <>
-                  <Stack spacing={"1rem"}>
-                    {Array.from({ length: 10 }).map((_, index) => (
-                      <Skeleton key={index} variant="rounded" height={"2rem"} />
-                    ))}
-                  </Stack>
-                  <Stack spacing={"1rem"}>
-                    {Array.from({ length: 10 }).map((_, index) => (
-                      <Skeleton key={index} variant="rounded" height={"2rem"} />
-                    ))}
-                  </Stack>
-                  <Stack spacing={"1rem"}>
-                    {Array.from({ length: 10 }).map((_, index) => (
-                      <Skeleton key={index} variant="rounded" height={"2rem"} />
-                    ))}
-                  </Stack>
-                </>
-              ) : products.length === 0 ? (
-                <p>No products found</p>
-              ) : (
-                products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))
-              )}
-            </div>
-
+            {/* Products Grid */}
+            {prodLoading ? (
+              <Stack spacing={4} className="px-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} variant="rectangular" height={200} />
+                ))}
+              </Stack>
+            ) : products.length === 0 ? (
+              <p className="text-center text-gray-500">No products found.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-0">
+                {products.map((prod) => (
+                  <ProductCard key={prod._id} product={prod} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

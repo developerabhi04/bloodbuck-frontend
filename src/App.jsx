@@ -103,10 +103,10 @@ const App = () => {
             }
           />
           <Route path="/products" element={
-              <MainLayout>
-                <Products />
-              </MainLayout>
-            }
+            <MainLayout>
+              <Products />
+            </MainLayout>
+          }
           />
           <Route path="/event-campaign"
             element={

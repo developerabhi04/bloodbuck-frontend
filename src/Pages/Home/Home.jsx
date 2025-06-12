@@ -6,7 +6,7 @@ import Category from './Category/Category';
 import ThirdBanner from './ThirdBanner/ThirdBanner';
 
 const Home = () => {
-    const siteTitle = 'Home Fem Cartel - Premium Products & Deals';
+    const siteTitle = 'Home Bloodbuck - Premium Products & Deals';
     const siteDescription = 'Discover the latest in electronics, fashion, home & more. Shop top brands with exclusive deals and free shipping.';
     const siteUrl = 'https://www.yourdomain.com/';
     const siteImage = `${siteUrl}images/og-home.jpg`;
@@ -19,7 +19,7 @@ const Home = () => {
         "description": siteDescription,
         "publisher": {
             "@type": "Organization",
-            "name": "Your Store",
+            "name": "Bloodbuck",
             "logo": {
                 "@type": "ImageObject",
                 "url": `${siteUrl}images/logo.png`
@@ -32,7 +32,7 @@ const Home = () => {
             <Helmet>
                 <title>{siteTitle}</title>
                 <meta name="description" content={siteDescription} />
-                <meta name="keywords" content="electronics, fashion, home, deals, free shipping" />
+                <meta name="keywords" content="Bags, home, deals, free shipping" />
 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />

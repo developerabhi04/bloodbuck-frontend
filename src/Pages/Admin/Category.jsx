@@ -1,232 +1,316 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import { FaTrash, FaEdit } from "react-icons/fa";
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { FaTrash, FaEdit, FaTags, FaTag } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
+import AdminSidebar from '../../Components/Admin/AdminSidebar';
+import 'react-toastify/dist/ReactToastify.css';
 import {
-  addCategory,
-  addSubCategory,
-  deleteCategory,
-  deleteSubCategory,
   fetchCategories,
+  addCategory,
   updateCategory,
-  updateSubCategory
-} from "../../redux/slices/categorySlices";
-import AdminSidebar from "../../Components/Admin/AdminSidebar";
-import { Skeleton } from "@mui/material";
+  deleteCategory,
+  addSubCategory,
+  updateSubCategory,
+  deleteSubCategory,
+} from '../../redux/slices/categorySlices';
 
 const Category = () => {
   const dispatch = useDispatch();
-  const { categories, loading, error } = useSelector((state) => state.categories);
+  const { categories, loading, error } = useSelector(s => s.categories);
 
-  // State for category inputs
-  const [categoryName, setCategoryName] = useState("");
-  const [image, setImage] = useState(null);
-  const [editingCategory, setEditingCategory] = useState(null);
+  // Category form state
+  const [catName, setCatName] = useState('');
+  const [catImage, setCatImage] = useState(null);
+  const [editCat, setEditCat] = useState(null);
 
-  // State for subcategory inputs
-  const [subcategoryName, setSubcategoryName] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [editingSubcategory, setEditingSubcategory] = useState(null);
+  // Subcategory form state
+  const [subName, setSubName] = useState('');
+  const [parentCat, setParentCat] = useState('');
+  const [editSub, setEditSub] = useState(null);
 
-  // Fetch categories when component mounts
+  // Fetch categories on mount
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  // Handle Image Selection
-  const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+  // Handlers
+  const resetCatForm = () => {
+    setCatName(''); setCatImage(null); setEditCat(null);
+  };
+  const resetSubForm = () => {
+    setSubName(''); setParentCat(''); setEditSub(null);
   };
 
-  // Handle Category Submission
-  const handleCategorySubmit = async (e) => {
+  const submitCategory = async e => {
     e.preventDefault();
+    if (!catName.trim()) return toast.error('Name required');
+    const fd = new FormData();
+    fd.append('name', catName);
+    if (catImage) fd.append('photo', catImage);
 
-    if (!categoryName.trim()) return toast.error("Category name cannot be empty!");
-
-    const formData = new FormData();
-    formData.append("name", categoryName);
-    if (image) {
-      formData.append("photos", image);
-    }
-
-    if (editingCategory) {
-      formData.append("id", editingCategory._id);
-      dispatch(updateCategory({ id: editingCategory._id, formData })).then(() => {
-        toast.success("Category updated successfully!");
-        resetCategoryForm();
-      });
+    if (editCat) {
+      await dispatch(updateCategory({ id: editCat._id, formData: fd })).unwrap();
+      toast.success('Category updated');
     } else {
-      dispatch(addCategory(formData)).then(() => {
-        toast.success("Category added successfully!");
-        resetCategoryForm();
-      });
+      await dispatch(addCategory(fd)).unwrap();
+      toast.success('Category added');
     }
+    dispatch(fetchCategories());
+    resetCatForm();
   };
 
-  // Handle Subcategory Submission
-  const handleSubcategorySubmit = (e) => {
+  const submitSub = async e => {
     e.preventDefault();
+    if (!subName.trim() || !parentCat) return toast.error('All fields required');
 
-    if (!subcategoryName.trim()) return toast.error("Subcategory name cannot be empty!");
-    if (!selectedCategory) return toast.error("Please select a category!");
-
-    if (editingSubcategory) {
-      dispatch(updateSubCategory({
-        id: editingSubcategory._id,
-        name: subcategoryName,
-        categoryId: selectedCategory
-      })).then(() => {
-        toast.success("Subcategory updated successfully!");
-        resetSubcategoryForm();
-      });
+    if (editSub) {
+      await dispatch(updateSubCategory({
+        id: editSub._id,
+        name: subName,
+        categoryId: parentCat
+      })).unwrap();
+      toast.success('Subcategory updated');
     } else {
-      dispatch(addSubCategory({ name: subcategoryName, categoryId: selectedCategory })).then(() => {
-        toast.success("Subcategory added successfully!");
-        resetSubcategoryForm();
-      });
+      await dispatch(addSubCategory({ name: subName, categoryId: parentCat })).unwrap();
+      toast.success('Subcategory added');
     }
+    dispatch(fetchCategories());
+    resetSubForm();
   };
 
-  // Handle Delete Category
-  const handleDeleteCategory = (id) => {
-    if (window.confirm("Are you sure you want to delete this category?")) {
-      dispatch(deleteCategory(id)).then(() => toast.success("Category deleted successfully!"));
-    }
+  const removeCat = async id => {
+    if (!window.confirm('Delete this category?')) return;
+    await dispatch(deleteCategory(id)).unwrap();
+    toast.success('Category deleted');
+    dispatch(fetchCategories());
   };
 
-  // Handle Delete Subcategory
-  const handleDeleteSubcategory = (id) => {
-    if (window.confirm("Are you sure you want to delete this subcategory?")) {
-      dispatch(deleteSubCategory(id)).then(() => toast.success("Subcategory deleted successfully!"));
-    }
+  const removeSub = async id => {
+    if (!window.confirm('Delete this subcategory?')) return;
+    await dispatch(deleteSubCategory(id)).unwrap();
+    toast.success('Subcategory deleted');
+    dispatch(fetchCategories());
   };
 
-  // Reset Forms
-  const resetCategoryForm = () => {
-    setCategoryName("");
-    setImage(null);
-    setEditingCategory(null);
+  const handleEditCat = cat => {
+    setEditCat(cat);
+    setCatName(cat.name);
+    setCatImage(null);
   };
 
-  const resetSubcategoryForm = () => {
-    setSubcategoryName("");
-    setSelectedCategory("");
-    setEditingSubcategory(null);
+  const handleEditSub = (sub, catId) => {
+    setEditSub(sub);
+    setSubName(sub.name);
+    setParentCat(catId);
   };
 
   return (
-    <div className="admin-container">
+    <div className="flex bg-gray-50 min-h-screen">
       <AdminSidebar />
 
-      <main className="category-containers">
-        {/* CATEGORY MANAGEMENT */}
-        <section className="category-section">
-          <h2>Manage Categories</h2>
+      <main className="flex-1 p-6 lg:p-8 pl-[64px] lg:pl-[258px] overflow-auto">
+        <div className="max-w-5xl mx-auto grid gap-8 lg:grid-cols-2">
+          {/* Categories Card */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-2xl shadow-lg overflow-hidden"
+          >
+            <div className="flex items-center px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600">
+              <FaTags className="text-white text-2xl mr-3" />
+              <h2 className="text-white text-xl font-semibold">Categories</h2>
+            </div>
 
-          {/* Add or Edit Category Form */}
-          <form onSubmit={handleCategorySubmit} encType="multipart/form-data">
-            <input
-              type="text"
-              placeholder="Enter Category Name"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              required
-            />
+            <div className="p-6">
+              {/* Category Form */}
+              <form onSubmit={submitCategory} className="grid gap-4">
+                <div>
+                  <label className="block text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={catName}
+                    onChange={e => setCatName(e.target.value)}
+                    placeholder="Category name"
+                    className="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-1">Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => setCatImage(e.target.files[0])}
+                    className="text-sm"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-max px-6 py-2 rounded-full text-white ${editCat ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
+                >
+                  {editCat ? 'Update Category' : 'Add Category'}
+                </motion.button>
+              </form>
 
-            <input type="file" accept="image/*" onChange={handleImageChange} />
-            <button type="submit" disabled={!categoryName.trim()}>
-              {editingCategory ? "Update Category" : "Add Category"}
-            </button>
-          </form>
+              {/* Category List */}
+              {loading ? (
+                <div className="py-6 text-center text-gray-500">Loading...</div>
+              ) : error ? (
+                <div className="py-6 text-center text-red-600">{error}</div>
+              ) : (
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: {},
+                    visible: { transition: { staggerChildren: 0.1 } }
+                  }}
+                  className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                >
+                  {categories.map(cat => (
+                    <motion.div
+                      key={cat._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      whileHover={{ scale: 1.03 }}
+                      className="group relative border border-gray-200 rounded-lg p-4 flex flex-col items-center"
+                    >
+                      {cat.photos?.[0]?.url && (
+                        <img
+                          src={cat.photos[0].url}
+                          alt={cat.name}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                      )}
+                      <h3 className="mt-3 text-center font-medium">{cat.name}</h3>
 
-          {/* Category List */}
-          {loading ? (
-            <Skeleton />
-          ) : error ? (
-            <p className="error">{error}</p>
-          ) : (
-            <ul className="category-list">
-              {categories.map((category) => (
-                <li key={category._id}>
-                  {category.photos?.[0]?.url && (
-                    <img
-                      src={category.photos[0]?.url}
-                      alt={category.name}
-                      style={{ width: "50px", height: "50px", objectFit: "cover" }}
-                    />
-                  )}
-                  <span>{category.name}</span>
-                  <div className="actions">
-                    <FaEdit
-                      className="edit-icon"
-                      onClick={() => {
-                        setEditingCategory(category);
-                        setCategoryName(category.name);
-                        setImage(null);
-                      }}
-                    />
-                    <FaTrash className="delete-icon" onClick={() => handleDeleteCategory(category._id)} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* SUBCATEGORY MANAGEMENT */}
-        <section className="subcategory-section">
-          <h2>Manage Subcategories</h2>
-
-          {/* Add or Edit Subcategory Form */}
-          <form onSubmit={handleSubcategorySubmit}>
-            <select required value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-              <option value="">Select Category</option>
-              {categories.map((category) => (
-                <option key={category._id} value={category._id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="text"
-              placeholder="Enter Subcategory Name"
-              value={subcategoryName}
-              onChange={(e) => setSubcategoryName(e.target.value)}
-              required
-            />
-            <button type="submit" disabled={!subcategoryName.trim() || !selectedCategory}>
-              {editingSubcategory ? "Update Subcategory" : "Add Subcategory"}
-            </button>
-          </form>
-
-          {/* Subcategory List */}
-          {loading ? (
-            <p>Loading subcategories...</p>
-          ) : (
-            <ul className="subcategory-list">
-              {categories.map((category) =>
-                category.subcategories?.map((sub) => (
-                  <li key={sub._id}>
-                    <span>{sub.name} (Under {category.name})</span>
-                    <div className="actions">
-                      <FaEdit
-                        className="edit-icon"
-                        onClick={() => {
-                          setEditingSubcategory(sub);
-                          setSubcategoryName(sub.name);
-                          setSelectedCategory(category._id);
-                        }}
-                      />
-                      <FaTrash className="delete-icon" onClick={() => handleDeleteSubcategory(sub._id)} />
-                    </div>
-                  </li>
-                ))
+                      <div className="absolute top-3 right-3 flex opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEditCat(cat)}
+                          className="text-yellow-500 hover:text-yellow-600 mr-2"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={() => removeCat(cat._id)}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
               )}
-            </ul>
-          )}
-        </section>
+            </div>
+          </motion.section>
+
+          {/* Subcategories Card */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-lg overflow-hidden"
+          >
+            <div className="flex items-center px-6 py-4 bg-gradient-to-r from-green-500 to-teal-500">
+              <FaTag className="text-white text-2xl mr-3" />
+              <h2 className="text-white text-xl font-semibold">Subcategories</h2>
+            </div>
+
+            <div className="p-6">
+              {/* Subcategory Form */}
+              <form onSubmit={submitSub} className="grid gap-4 mb-6">
+                <div>
+                  <label className="block text-gray-700 mb-1">Parent Category</label>
+                  <select
+                    value={parentCat}
+                    onChange={e => setParentCat(e.target.value)}
+                    className="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-green-400"
+                    required
+                  >
+                    <option value="">Select category</option>
+                    {categories.map(cat => (
+                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-1">Subcategory Name</label>
+                  <input
+                    type="text"
+                    value={subName}
+                    onChange={e => setSubName(e.target.value)}
+                    placeholder="Subcategory name"
+                    className="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-green-400"
+                    required
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-max px-6 py-2 rounded-full text-white ${editSub ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-600 hover:bg-green-700'
+                    }`}
+                >
+                  {editSub ? 'Update Subcategory' : 'Add Subcategory'}
+                </motion.button>
+              </form>
+
+              {/* Subcategory List */}
+              {loading ? (
+                <div className="py-6 text-center text-gray-500">Loading...</div>
+              ) : (
+                <motion.ul
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: {},
+                    visible: { transition: { staggerChildren: 0.1 } }
+                  }}
+                  className="space-y-4"
+                >
+                  {categories.map(cat =>
+                    cat.subcategories?.map(sub => (
+                      <motion.li
+                        key={sub._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ scale: 1.02 }}
+                        className="group flex items-center justify-between bg-gray-50 rounded-lg p-4"
+                      >
+                        <div>
+                          <span className="font-medium">{sub.name}</span>
+                          <span className="ml-2 text-sm text-gray-500">
+                            (in {cat.name})
+                          </span>
+                        </div>
+                        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleEditSub(sub, cat._id)}
+                            className="text-yellow-500 hover:text-yellow-600"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => removeSub(sub._id)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </motion.li>
+                    ))
+                  )}
+                </motion.ul>
+              )}
+            </div>
+          </motion.section>
+        </div>
       </main>
     </div>
   );

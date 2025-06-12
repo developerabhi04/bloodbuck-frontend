@@ -4,14 +4,11 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { fetchReviews, submitReview } from "../../redux/slices/reviewSlices.js";
 
-
 const ReviewSection = ({ productId, reviewed }) => {
     const dispatch = useDispatch();
-
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState("");
 
-    // On mount or when productId changes, fetch reviews and log the result for debugging
     useEffect(() => {
         if (productId) {
             dispatch(fetchReviews(productId))
@@ -37,39 +34,50 @@ const ReviewSection = ({ productId, reviewed }) => {
             toast.success("Review submitted successfully!");
             setRating(0);
             setComment("");
-            // Re-fetch reviews after submission to ensure the list is updated
             dispatch(fetchReviews(productId));
         } catch (err) {
             console.error("Submit review error:", err);
-            toast.error(err);
+            toast.error(err.message || "Failed to submit review.");
         }
     };
 
     return (
-        <div className="review-section">
-            <h2>Leave Your Review</h2>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Leave Your Review
+            </h2>
+
             {reviewed ? (
-                <p>You have already submitted a review for this product.</p>
+                <p className="text-green-600 font-medium">
+                    You have already submitted a review for this product.
+                </p>
             ) : (
-                <form className="review-form" onSubmit={handleSubmit}>
-                    <div className="rating-input">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div className="flex items-center">
+                        <span className="mr-3 text-gray-700 font-medium">Your Rating:</span>
                         <Rating
                             value={rating}
-                            onChange={(e, newValue) => {
-                                console.log("Rating changed:", newValue);
-                                setRating(newValue);
-                            }}
+                            onChange={(e, newValue) => setRating(newValue)}
+                            className="text-yellow-400"
                         />
                     </div>
+
                     <textarea
+                        rows={4}
                         placeholder="Write your review here..."
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                     />
-                    <button type="submit">Submit Review</button>
+
+                    <button
+                        type="submit"
+                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition"
+                    >
+                        Submit Review
+                    </button>
                 </form>
             )}
-           
         </div>
     );
 };

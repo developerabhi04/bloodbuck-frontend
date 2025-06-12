@@ -1,241 +1,264 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { Stepper, Step, StepLabel, Grid, Stack, Skeleton } from "@mui/material";
-import { deleteOrder, fetchOrderDetails } from "../../redux/slices/orderSlices";
+import { fetchOrderDetails, deleteOrder } from "../../redux/slices/orderSlices";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import { Helmet } from "react-helmet-async";
 import ReviewSection from "./Review";
+
+const statusSteps = ["Pending", "Processing", "Shipped", "Delivered"];
 
 const OrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const { orderDetails, loading, error } = useSelector((state) => state.order);
-
-  // Map order status to Stepper steps
-  // const [reviews, setReviews] = useState({});
-  // const [submittedReviews, setSubmittedReviews] = useState({});
-
-  const statusSteps = ["Pending", "Processing", "Shipped", "Delivered"];
-  const currentStep = statusSteps.indexOf(orderDetails?.status || "Pending");
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     dispatch(fetchOrderDetails(id));
   }, [dispatch, id]);
 
-  const handleCancelOrder = async () => {
-    if (window.confirm("Are you sure you want to cancel this order?")) {
+  useEffect(() => {
+    if (orderDetails) {
+      setCurrentStep(statusSteps.indexOf(orderDetails.status));
+    }
+  }, [orderDetails]);
+
+  const handleCancel = async () => {
+    if (confirm("Are you sure you want to cancel this order?")) {
       await dispatch(deleteOrder(id));
       navigate("/orders");
     }
   };
+  const handleContact = () => navigate("/chat-support");
 
-  if (loading)
+  if (loading) {
     return (
-      <>
-        <Grid item md={5} sm={8} xs={12} lg={12} height={"100%"}>
-          <Stack spacing={"1rem"}>
-            {Array.from({ length: 18 }).map((_, index) => (
-              <Skeleton key={index} variant="rounded" height={"2rem"} />
-            ))}
-          </Stack>
-        </Grid>
-      </>
+      <div className="max-w-6xl mx-auto p-6 space-y-6 animate-pulse">
+        <div className="h-40 bg-gray-200 rounded-lg" />
+        <div className="h-64 bg-gray-200 rounded-lg" />
+        <div className="h-80 bg-gray-200 rounded-lg" />
+      </div>
     );
-  if (error) return <p className="error">Error: {error}</p>;
-  if (!orderDetails) return <p>Order not found</p>;
+  }
 
-  // const handleReviewChange = (productId, field, value) => {
-  //     setReviews((prev) => ({
-  //         ...prev,
-  //         [productId]: { ...prev[productId], [field]: value },
-  //     }));
-  // };
+  if (error) {
+    return (
+      <div className="text-red-600 text-center py-12">
+        Error loading order: {error}
+      </div>
+    );
+  }
 
-  // const handleSubmitReview = async (productId) => {
-  //     console.log("Submitting review for product:", productId);
-
-  //     if (submittedReviews[productId]) {
-  //         return toast.error("You have already reviewed this product!");
-  //     }
-
-  //     const { rating, comment } = reviews[productId] || {};
-  //     if (!rating || !comment) {
-  //         return toast.error("Please provide a rating and comment.");
-  //     }
-
-  //     try {
-  //         const response = await dispatch(submitReview({ productId, rating, comment }));
-  //         console.log("Review submission response:", response);
-  //         toast.success("Review submitted!");
-
-  //         // ✅ Mark product as reviewed
-  //         setSubmittedReviews((prev) => ({ ...prev, [productId]: true }));
-
-  //     } catch (error) {
-  //         console.error("Error submitting review:", error);
-  //         toast.error("Failed to submit review.");
-  //     }
-  // };
-
-  const handleContactSupport = () => {
-    navigate("/chat-support");
-  };
+  if (!orderDetails) {
+    return (
+      <div className="text-gray-700 text-center py-12">
+        Order not found.
+      </div>
+    );
+  }
 
   return (
-    <section className="order-details-page">
-      <div className="container">
-        <div className="order-header">
-          <h1>Order Details</h1>
-          <p>Track and view detailed information about your order below.</p>
-        </div>
+    <>
+      <Helmet>
+        <title>Order #{orderDetails._id.slice(-8).toUpperCase()} | Your Store</title>
+      </Helmet>
 
-        {/* Order Overview */}
-        <div className="order-overview">
-          <div className="overview-item">
-            <h3>Order #{orderDetails._id.slice(-10).toUpperCase()}</h3>
-            <p>
-              Placed on:{" "}
-              {new Date(orderDetails.createdAt).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
-            <p>
-              Status:{" "}
-              <span className={`status ${orderDetails.status.toLowerCase()}`}>
-                {orderDetails.status}
-              </span>
-            </p>
-          </div>
-          <div className="overview-item">
-            <p>
-              <strong>Payment Method:</strong>{" "}
-              {orderDetails.paymentMethod === "COD"
-                ? "Cash on Delivery"
-                : "Online Payment"}
-            </p>
-            <p>
-              <strong>Total Price:</strong> ${orderDetails.total.toFixed(2)}
-            </p>
-            <p>
-              <strong>Coupon Discount:</strong> $
-              {orderDetails.discountAmount.toFixed(2)}
-            </p>
-            <p>
-              <strong>Tax:</strong> ${orderDetails.tax.toFixed(2)}
-            </p>
-          </div>
-        </div>
-
-        {/* Order Tracking */}
-        <div className="order-tracking">
-          <h2>Order Tracking</h2>
-          <Stepper activeStep={currentStep} alternativeLabel>
-            {statusSteps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-        </div>
-
-        {/* Product Details */}
-        <div className="product-details">
-          <h2>Products</h2>
-          <div className="product-list">
-            {orderDetails.cartItems?.map((item) => (
-              <div className="product-item" key={item._id}>
-                <div className="product-image">
-                  <img
-                    src={item.imageUrl || "/default-product.png"}
-                    alt={item.name}
-                  />
+      <section className="min-h-screen bg-gray-50 py-32 px-4">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-2">
+          {/* Left Sidebar */}
+          <aside className="space-y-6 lg:col-span-1">
+            {/* Order Summary */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Order Summary
+              </h2>
+              <div className="space-y-2 text-gray-600">
+                <div className="flex justify-between">
+                  <span>Order ID:</span>
+                  <span className="font-medium">{orderDetails._id}</span>
                 </div>
-                <div className="product-info">
-                  <h5>{item.name}</h5>
-                  <p>Size: {item.selectedSize || item.selectedSeamSize}</p>
-                  <p>Colour: {item.selectedColorName || "N/A"}</p>
-                  <p>Quantity: {item.quantity}</p>
-                  <p>Price: ${item.price.toFixed(2)}</p>
-
-                  {/* Review Form - Only if Delivered */}
-                  {orderDetails.status === "Delivered" && (
-                    <ReviewSection
-                      productId={item.productId}
-                      reviewed={item.reviewed}
-                    />
-                  )}
+                <div className="flex justify-between">
+                  <span>Placed On:</span>
+                  <span className="font-medium">
+                    {new Date(orderDetails.createdAt).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Payment:</span>
+                  <span className="font-medium">
+                    {orderDetails.paymentMethod === "CashOnDelivery"
+                      ? "Cash on Delivery"
+                      : "Online"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total:</span>
+                  <span className="font-semibold text-gray-900">
+                    ₹{orderDetails.total.toFixed(2)}
+                  </span>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Status Timeline */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Order Status
+              </h2>
+              <ul className="space-y-6">
+                {statusSteps.map((label, idx) => (
+                  <li key={label} className="flex items-start">
+                    <div className="flex flex-col items-center">
+                      {idx <= currentStep ? (
+                        <CheckCircleIcon className="text-indigo-600" />
+                      ) : (
+                        <RadioButtonUncheckedIcon className="text-gray-300" />
+                      )}
+                      {idx < statusSteps.length - 1 && (
+                        <div
+                          className={`w-px flex-1 my-1 ${idx < currentStep ? "bg-indigo-600" : "bg-gray-300"
+                            }`}
+                        />
+                      )}
+                    </div>
+                    <p
+                      className={`ml-4 text-lg ${idx <= currentStep
+                        ? "text-gray-900 font-medium"
+                        : "text-gray-400"
+                        }`}
+                    >
+                      {label}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Actions */}
+            <div className="bg-white p-6 rounded-lg shadow space-y-3">
+              {orderDetails.status !== "Delivered" && (
+                <button
+                  onClick={handleCancel}
+                  disabled={orderDetails.status === "Shipped"}
+                  className={`w-full text-center px-4 py-2 rounded-lg font-semibold transition ${orderDetails.status === "Shipped"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700 text-white"
+                    }`}
+                >
+                  {orderDetails.status === "Shipped"
+                    ? "Cannot Cancel Shipped"
+                    : "Cancel Order"}
+                </button>
+              )}
+              <button
+                onClick={handleContact}
+                className="w-full text-center px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
+              >
+                Contact Support
+              </button>
+            </div>
+          </aside>
+
+          {/* Right Content */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Products */}
+            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Products
+              </h2>
+              <div className="space-y-6">
+                {orderDetails.cartItems.map((item) => (
+                  <div
+                    key={item.productId}
+                    className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={item.imageUrl || "/default-product.png"}
+                        alt={item.name}
+                        className="w-24 h-24 object-cover rounded-lg border"
+                      />
+                      <div>
+                        <h3 className="text-xl font-medium text-gray-800">
+                          {item.name}
+                        </h3>
+                        <p className="text-gray-500">
+                          Size: {item.selectedSize || item.selectedSeamSize}{" "}
+                          | Color: {item.selectedColorName || "N/A"}
+                        </p>
+                        <p className="text-gray-500">Qty: {item.quantity}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-6">
+                      <p className="text-lg font-semibold text-gray-900">
+                        ₹{(item.price * item.quantity).toFixed(2)}
+                      </p>
+                      {orderDetails.status === "Delivered" && (
+                        <ReviewSection
+                          productId={item.productId}
+                          reviewed={item.reviewed}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Billing & Shipping */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  Payment Summary
+                </h2>
+                <div className="space-y-3 text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>₹{orderDetails.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Discount</span>
+                    <span>-₹{orderDetails.discountAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tax</span>
+                    <span>₹{orderDetails.tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-gray-900">
+                    <span>Total</span>
+                    <span>₹{orderDetails.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                  Shipping Information
+                </h2>
+                <div className="space-y-1 text-gray-600">
+                  <p>{orderDetails.shippingDetails.fullName}</p>
+                  <p>{orderDetails.shippingDetails.address}</p>
+                  <p>
+                    {orderDetails.shippingDetails.city},{" "}
+                    {orderDetails.shippingDetails.state} -{" "}
+                    {orderDetails.shippingDetails.zipCode}
+                  </p>
+                  <p>Phone: {orderDetails.shippingDetails.phoneNumber}</p>
+                  <p>Email: {orderDetails.shippingDetails.email}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Payment Summary */}
-        <div className="payment-details">
-          <h2>Payment Summary</h2>
-          <div className="summary-item">
-            <p>Subtotal:</p>
-            <p>${orderDetails.subtotal.toFixed(2)}</p>
-          </div>
-          <div className="summary-item">
-            <p>Discount:</p>
-            <p>-${orderDetails.discountAmount.toFixed(2)}</p>
-          </div>
-          <div className="summary-item">
-            <p>Tax:</p>
-            <p>${orderDetails.tax.toFixed(2)}</p>
-          </div>
-          <div className="summary-item total">
-            <p>
-              <strong>Total:</strong>
-            </p>
-            <p>
-              <strong>${orderDetails.total.toFixed(2)}</strong>
-            </p>
-          </div>
-        </div>
-
-        {/* Shipping Details */}
-        <div className="shipping-details">
-          <h2>Shipping Information</h2>
-          <p>{orderDetails.shippingDetails.fullName}</p>
-          <p>{orderDetails.shippingDetails.address}</p>
-          <p>
-            {orderDetails.shippingDetails.city},{" "}
-            {orderDetails.shippingDetails.state} -{" "}
-            {orderDetails.shippingDetails.zipCode}
-          </p>
-          <p>Phone: {orderDetails.shippingDetails.phoneNumber}</p>
-          <p>Email: {orderDetails.shippingDetails.email}</p>
-        </div>
-
-        {/* Action Buttons */}
-        {orderDetails.status !== "Delivered" && (
-          <div className="action-buttons">
-            <button
-              className="cancel-order"
-              onClick={handleCancelOrder}
-              disabled={orderDetails.status === "Shipped"}
-            >
-              {orderDetails.status === "Shipped"
-                ? "Cannot Cancel Shipped Order"
-                : "Cancel Order"}
-            </button>
-            {/* <button className="contact-support" >Contact Support</button> */}
-          </div>
-        )}
-
-        <div className="action-buttons">
-          <div></div>
-          <button className="contact-support" onClick={handleContactSupport}>
-            Contact Support
-          </button>
-        </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
 

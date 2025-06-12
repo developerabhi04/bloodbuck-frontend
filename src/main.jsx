@@ -4,7 +4,8 @@ import { Provider } from "react-redux";
 import axios from "axios";
 import store from "./redux/store";
 import App from "./App.jsx";
-import "./Styles/app.scss";
+import "./index.css";
+// import "./Styles/app.scss";
 import { HelmetProvider } from "react-helmet-async";
 
 axios.defaults.withCredentials = true;

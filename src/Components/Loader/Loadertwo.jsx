@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import ClipLoader from "react-spinners/ClipLoader";
 
-const Loadertwo = ({ loading = true, message = ".....", size = 100, color = "#c8102e" }) => {
+const Loadertwo = ({ loading = true, message = ".....", size = 100, color = "#200d0d" }) => {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -47,12 +47,17 @@ const Loadertwo = ({ loading = true, message = ".....", size = 100, color = "#c8
 
 const styles = {
     loaderContainer: {
+        position: "fixed", // make it cover the screen
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh",
-        // backgroundColor: "tranparent",
-        backdropFilter: "blur(50px)", // Glassmorphism effect
+        backgroundColor: "rgba(0, 0, 0, 0.2)", // optional: slightly dark overlay; set to "transparent" if not needed
+        backdropFilter: "blur(8px)", // soft blur for focus
+        zIndex: 9999, // ensure it appears above other elements
     },
     loaderBox: {
         display: "flex",
@@ -61,10 +66,7 @@ const styles = {
         justifyContent: "center",
         padding: "20px",
         borderRadius: "15px",
-        // boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
-        // background: "red",
-        // backdropFilter: "blur(20px)", // Glassmorphism effect
-        // padding: "30px",
+        backgroundColor: "rgba(255, 255, 255, 0.05)", // optional subtle box background
     },
     text: {
         marginTop: "15px",
@@ -77,9 +79,9 @@ const styles = {
         marginTop: "10px",
     },
     dot: {
-        width: "8px",
-        height: "8px",
-        backgroundColor: "#c8102e",
+        width: "18px",
+        height: "18px",
+        backgroundColor: "#200d0d",
         borderRadius: "50%",
         margin: "0 4px",
     },

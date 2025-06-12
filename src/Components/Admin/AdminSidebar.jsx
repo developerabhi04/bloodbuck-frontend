@@ -1,156 +1,97 @@
-import { useEffect, useState } from "react";
-import { AiFillFileText } from "react-icons/ai";
-import { FaChartBar, FaChartLine, FaChartPie } from "react-icons/fa";
-import { HiMenuAlt4 } from "react-icons/hi";
-import { IoIosPeople } from "react-icons/io";
-import { RiCoupon2Fill, RiDashboardFill, RiShoppingBag3Fill } from "react-icons/ri";
-import { Link, useLocation } from "react-router-dom";
-import { FaRegImages } from "react-icons/fa";
-import { MdCategory, MdEvent } from "react-icons/md";
+import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { HiMenuAlt3 } from 'react-icons/hi';
+import { RiDashboardFill, RiShoppingBag3Fill, RiCoupon2Fill } from 'react-icons/ri';
+import { MdCategory, MdEvent } from 'react-icons/md';
+import { FaRegImages } from 'react-icons/fa';
+import { IoIosPeople } from 'react-icons/io';
+import { AiFillFileText } from 'react-icons/ai';
 
+// Define main navigation links
+const MAIN_LINKS = [
+  { to: '/admin/dashboard', label: 'Dashboard', Icon: RiDashboardFill },
+  { to: '/admin/event', label: 'Events', Icon: MdEvent },
+  { to: '/admin/banner', label: 'Banners', Icon: FaRegImages },
+  { to: '/admin/category', label: 'Categories', Icon: MdCategory },
+  { to: '/admin/products', label: 'Products', Icon: RiShoppingBag3Fill },
+  { to: '/admin/coupons', label: 'Coupons', Icon: RiCoupon2Fill },
+  { to: '/admin/customers', label: 'Customers', Icon: IoIosPeople },
+  { to: '/admin/transaction', label: 'Orders', Icon: AiFillFileText },
+];
+
+// Define chart navigation links
+const CHART_LINKS = [
+  { to: '/admin/chart/bar', label: 'Bar Chart', Icon: RiDashboardFill },
+  { to: '/admin/chart/pie', label: 'Pie Chart', Icon: RiDashboardFill },
+  { to: '/admin/chart/line', label: 'Line Chart', Icon: RiDashboardFill },
+];
+
+// Sidebar component
 const AdminSidebar = () => {
-    const location = useLocation();
+  const { pathname } = useLocation();
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 1024);
 
-    const [showModal, setShowModal] = useState(false);
-    const [phoneActive, setPhoneActive] = useState(window.innerWidth < 1100);
+  // Auto-collapse on small resize
+  useEffect(() => {
+    const onResize = () => setCollapsed(window.innerWidth < 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
-    const resizeHandler = () => {
-        setPhoneActive(window.innerWidth < 1100);
-    };
+  return (
+    <motion.aside
+      animate={{ width: collapsed ? '64px' : '250px' }}
+      transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+      className="fixed top-0 left-0 h-full bg-gray-900 text-gray-300 shadow-xl flex flex-col z-30 overflow-hidden"
+    >
+      {/* Logo / Title & toggle */}
+      <div className="flex flex-col items-center justify-between h-20 px-4">
+        <Link
+          to="/"
+          className={`flex items-center h-12 ${collapsed ? 'justify-center' : ''} text-2xl font-bold text-white`}
+        >
+          {collapsed ? 'BB' : 'BloodBuck CRM'}
+        </Link>
+        <button
+          className="mt-4 p-2 bg-gray-800 text-white rounded-full hover:bg-gray-700"
+          onClick={() => setCollapsed(prev => !prev)}
+        >
+          <HiMenuAlt3 size={20} />
+        </button>
+      </div>
 
-    useEffect(() => {
-        window.addEventListener("resize", resizeHandler);
-
-        return () => {
-            window.removeEventListener("resize", resizeHandler);
-        };
-    }, []);
-
-    return (
-        <>
-            {phoneActive && (
-                <button id="hamburger" onClick={() => setShowModal(true)}>
-                    <HiMenuAlt4 />
-                </button>
-            )}
-
-            <aside
-                style={ phoneActive
-                        ? {
-                            width: "20rem",
-                            height: "100vh",
-                            position: "fixed",
-                            top: 0,
-                            left: showModal ? "0" : "-20rem",
-                            transition: "all 0.5s",
-                        }
-                        : {}
-                }
-            >
-                {/* <h2 style={{ textAlign: "center", color: "pink" }}>Fem Cartel</h2> */}
-                <h2 style={{ textAlign: "center", color: "pink", cursor: "pointer" }}>
-                    <Link to="/" style={{ textDecoration: "none", color: "pink" }}>
-                        Fem Cartel
-                    </Link>
-                </h2>
-                <div>
-                    <h5>Navigation</h5>
-                    <ul>
-                        <Li
-                            url={"/admin/dashboard"}
-                            text={"Dashboard"}
-                            Icon={RiDashboardFill}
-                            location={location}
-                        />
-                        <Li
-                            url={"/admin/event"}
-                            text={"Event"}
-                            Icon={MdEvent}
-                            location={location}
-                        />
-                        <Li
-                            url={"/admin/banner"}
-                            text={"Banner"}
-                            Icon={FaRegImages}
-                            location={location}
-                        />
-                        <Li
-                            url={"/admin/category"}
-                            text={"Category"}
-                            Icon={MdCategory}
-                            location={location}
-                        />
-                        <Li
-                            url={"/admin/products"}
-                            text={"Products"}
-                            Icon={RiShoppingBag3Fill}
-                            location={location}
-                        />
-                        <Li
-                            url={"/admin/coupons"}
-                            text={"Coupon"}
-                            Icon={RiCoupon2Fill}
-                            location={location}
-                        />
-                        <Li
-                            url={"/admin/customers"}
-                            text={"Customer"}
-                            Icon={IoIosPeople}
-                            location={location}
-                        />
-                        <Li
-                            url={"/admin/transaction"}
-                            text={"Transaction"}
-                            Icon={AiFillFileText}
-                            location={location}
-                        />
-                    </ul>
-                </div>
-
-                <DivTwo location={location} />
-                {/* <DivThree location={location} /> */}
-
-                {phoneActive && (
-                    <button id="close-sidebar" onClick={() => setShowModal(false)}>
-                        Close
-                    </button>
-                )}
-            </aside>
-        </>
-    );
+      {/* Navigation sections */}
+      <nav className="flex-1 overflow-y-auto pt-4">
+        <NavSection title="Main" links={MAIN_LINKS} collapsed={collapsed} activePath={pathname} />
+        <NavSection title="Analytics" links={CHART_LINKS} collapsed={collapsed} activePath={pathname} />
+      </nav>
+    </motion.aside>
+  );
 };
 
-////////////////////////////////////////////////////
-const DivTwo = ({ location }) => (
-    <div>
-        <h5>Charts</h5>
-        <ul>
-            <Li url={"/admin/chart/bar"} text={"Bar"} Icon={FaChartBar} location={location} />
-            <Li url={"/admin/chart/pie"} text={"Pie"} Icon={FaChartPie} location={location} />
-            <Li url={"/admin/chart/line"} text={"Line"} Icon={FaChartLine} location={location} />
-        </ul>
-    </div>
-);
-
-
-const Li = ({ url, text, location, Icon }) => (
-    <li
-        style={{
-            backgroundColor: location.pathname.includes(url)
-                ? "rgba(0, 115, 255, 0.1)"
-                : "#144f67",
-        }}
-    >  
-        <Link
-            to={url}
-            style={{
-                color: location.pathname.includes(url) ? "rgb(0, 115, 255)" : "black",
-            }}
-        >
-            <Icon />
-            {text}
-        </Link>
-    </li>
+// Section component for grouping links
+const NavSection = ({ title, links, collapsed, activePath }) => (
+  <div className="mt-6">
+    {!collapsed && <h6 className="px-4 mb-2 text-xs font-semibold uppercase text-gray-500">{title}</h6>}
+    <ul>
+      {links.map(({ to, label, Icon }) => {
+        const active = activePath.startsWith(to);
+        return (
+          <li key={to} className="mb-1">
+            <Link
+              to={to}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active ? 'bg-blue-600 text-white' : 'hover:bg-gray-800 hover:text-white'
+                }`}
+            >
+              <Icon size={20} />
+              {!collapsed && <span className="flex-1">{label}</span>}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
 );
 
 export default AdminSidebar;

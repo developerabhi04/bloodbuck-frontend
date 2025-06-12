@@ -1,129 +1,132 @@
-import { useCallback, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { deleteUser, fetchUsers, updateUserRole } from "../../redux/slices/userSlices";
-import AdminSidebar from "../../Components/Admin/AdminSidebar";
-import TableHOC from "../../Components/Admin/TableHOC";
-import { FaTrash } from "react-icons/fa";
-import { toast } from "react-toastify";
-import Loadertwo from "../../Components/Loader/Loadertwo";
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { FaTrash } from 'react-icons/fa';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const columns = [
-  { Header: "Avatar", accessor: "avatar" },
-  { Header: "Name", accessor: "name" },
-  { Header: "Email", accessor: "email" },
-  { Header: "Role", accessor: "role" },
-  { Header: "Change Role", accessor: "roles" },
-  { Header: "Action", accessor: "action" },
-];
+import AdminSidebar from '../../Components/Admin/AdminSidebar';
+import Loadertwo from '../../Components/Loader/Loadertwo';
+import {
+  fetchUsers,
+  deleteUser,
+  updateUserRole
+} from '../../redux/slices/userSlices';
 
 const Customers = () => {
   const dispatch = useDispatch();
-  const { users, loading, error } = useSelector((state) => state.user);
+  const { users, loading, error } = useSelector((s) => s.user);
 
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
 
-  // Delete user function
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      dispatch(deleteUser(id));
-    }
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    dispatch(deleteUser(id))
+      .unwrap()
+      .then(() => {
+        toast.success('User deleted');
+        dispatch(fetchUsers());
+      })
+      .catch((err) => toast.error(`Delete failed: ${err.message || err}`));
   };
 
-  // Update user role based on select choice
   const handleRoleChange = (id, name, email, newRole) => {
-    if (window.confirm(`Change ${name}'s role to ${newRole}?`)) {
-      dispatch(updateUserRole({ id, name, email, role: newRole }))
-        .unwrap()
-        .then(() => toast.success(`User role changed to ${newRole}`))
-        .catch((err) => toast.error(err));
-    }
+    if (!window.confirm(`Change ${name}'s role to ${newRole}?`)) return;
+    dispatch(updateUserRole({ id, name, email, role: newRole }))
+      .unwrap()
+      .then(() => {
+        toast.success(`${name} is now a ${newRole}`);
+        dispatch(fetchUsers());
+      })
+      .catch((err) => toast.error(err.message || err));
   };
-
-  // Transform users into table-friendly format
-  const data = users.map((user) => ({
-    avatar: (
-      <img
-        style={{ borderRadius: "50%", width: "40px", height: "40px" }}
-        src={user.avatar[0]?.url}
-        alt="Avatar"
-      />
-    ),
-    name: user.name,
-    email: user.email,
-    role: (
-      <span
-        style={{
-          background: user.role === "admin" ? "green" : "red",
-          fontWeight: "bold",
-          color: "white",
-          padding: "0.25rem 0.5rem",
-          borderRadius: "5px",
-        }}
-      >
-        {user.role || "user"}
-      </span>
-    ),
-    // Select dropdown for changing role
-    roles: (
-      <select
-        value={user.role || "user"}
-        onChange={(e) =>
-          handleRoleChange(
-            user._id,
-            user.name,
-            user.email,
-            e.target.value
-          )
-        }
-        style={{
-          padding: "0.25rem 0.5rem",
-          borderRadius: "4px",
-          border: "1px solid #ccc",
-          cursor: "pointer",
-        }}
-      >
-        <option value="user">User</option>
-        <option value="admin">Admin</option>
-      </select>
-    ),
-    action: (
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <button
-          onClick={() => handleDelete(user._id)}
-          disabled={user.role === "admin"}
-          style={{
-            padding: "0.25rem 0.5rem",
-            border: "none",
-            background: user.role === "admin" ? "#ccc" : "transparent",
-            color: user.role === "admin" ? "#666" : "red",
-            cursor: user.role === "admin" ? "not-allowed" : "pointer",
-          }}
-        >
-          <FaTrash />
-        </button>
-      </div>
-    ),
-  }));
-
-  // Wrap TableHOC in useCallback to avoid re-renders
-  const Table = useCallback(() => {
-    return TableHOC(columns, data, "dashboard-product-box", "Customers", true)();
-  }, [columns, data]);
 
   return (
-    <div className="admin-container">
+    <div className="flex bg-gray-50 min-h-screen">
       <AdminSidebar />
-      <main>
+
+      <main className="relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] lg:pl-[258px]">
+        <ToastContainer position="top-right" />
+
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Customers</h1>
+
         {loading ? (
-          <>
-            <Loadertwo />
-          </>
+          <Loadertwo />
         ) : error ? (
-          <p style={{ color: "red" }}>{error}</p>
+          <p className="text-red-600">{error}</p>
         ) : (
-          <Table />
+          <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-100">
+                <tr>
+                  {['Avatar', 'Name', 'Email', 'Role', 'Change Role', 'Action'].map((h) => (
+                    <th
+                      key={h}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {users.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <img
+                        src={user.avatar[0]?.url}
+                        alt=""
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-800">{user.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-800">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                          }`}
+                      >
+                        {user.role || 'user'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <select
+                        value={user.role || 'user'}
+                        onChange={(e) =>
+                          handleRoleChange(
+                            user._id,
+                            user.name,
+                            user.email,
+                            e.target.value
+                          )
+                        }
+                        className="border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-blue-400"
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleDelete(user._id)}
+                        disabled={user.role === 'admin'}
+                        className={`p-2 rounded-full ${user.role === 'admin'
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-red-100 text-red-600 hover:bg-red-200'
+                          }`}
+                        title="Delete User"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </main>
     </div>

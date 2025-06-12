@@ -1,335 +1,369 @@
+// src/components/ProductDetails.jsx
 import { useState, useEffect } from "react";
-import { Grid, Rating, Skeleton, Stack } from "@mui/material";
 import { Add, FavoriteBorder, Remove } from "@mui/icons-material";
+import { Rating, Skeleton, Stack } from "@mui/material";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchSimilarProducts,
   fetchSingleProduct,
+  fetchSimilarProducts,
 } from "../../redux/slices/productSlices";
 import { addToCart } from "../../redux/slices/cartSlices";
-import { addToWishlist, fetchWishlistItems } from "../../redux/slices/wishlistSlices";
+import {
+  addToWishlist,
+  fetchWishlistItems,
+} from "../../redux/slices/wishlistSlices";
 import { toast } from "react-toastify";
-import SimilarProduct from "./SimilarProduct";
 import { Helmet } from "react-helmet-async";
+import SimilarProduct from "./SimilarProduct";
+import LockIcon from "@mui/icons-material/Lock";
+import ReplayIcon from "@mui/icons-material/Replay";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 
+function ReviewItem({ review }) {
+  const [expanded, setExpanded] = useState(false);
+  const threshold = 150;
+  const fullText = review.comment;
+  const text = !expanded && fullText.length > threshold
+    ? fullText.slice(0, threshold) + "..."
+    : fullText;
 
+  return (
+    <div className="bg-white p-6 rounded-lg shadow mb-6">
+      <div className="flex items-center mb-4">
+        <img
+          src={review.user?.avatar?.[0]?.url || "/default-user.png"}
+          alt={review.user?.name || "User"}
+          className="w-12 h-12 rounded-full object-cover border-2 border-red-600 mr-4"
+        />
+        <div>
+          <p className="font-semibold text-gray-800">
+            {review.user?.name || "Anonymous"}
+          </p>
+          <Rating value={review.rating} readOnly size="small" precision={0.5} />
+        </div>
+      </div>
+      <p className="text-gray-700 mb-2">{text}</p>
+      {fullText.length > threshold && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-red-600 text-sm font-medium hover:underline"
+        >
+          {expanded ? "Show Less" : "Read More"}
+        </button>
+      )}
+      <p className="text-sm text-gray-500 text-right mt-4">
+        {new Date(review.createdAt).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}
+      </p>
+    </div>
+  );
+}
 
-
-const ProductDetails = () => {
+export default function ProductDetails() {
   const { id } = useParams();
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const { wishlistItems } = useSelector((state) => state.wishlist);
-  const { user } = useSelector((state) => state.user);
-  const { cartItems } = useSelector((state) => state.shopCart);
-  const { product, loading, error } = useSelector((state) => state.products);
+  const { product, loading, error } = useSelector((s) => s.products);
+  const { wishlistItems } = useSelector((s) => s.wishlist);
+  const { cartItems } = useSelector((s) => s.shopCart);
+  const { user } = useSelector((s) => s.user);
 
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [descriptionOpen, setDescriptionOpen] = useState(false);
-  const [selectedThumbnail, setSelectedThumbnail] = useState(0);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [thumbIndex, setThumbIndex] = useState(0);
+  const [qty, setQty] = useState(1);
+  const [showDesc, setShowDesc] = useState(false);
 
   useEffect(() => {
     dispatch(fetchSingleProduct(id));
   }, [dispatch, id]);
 
   useEffect(() => {
-    if (product && product.colors && product.colors.length > 0) {
+    if (product?.colors?.length) {
       setSelectedColor(product.colors[0].colorName);
-      setSelectedThumbnail(0);
       dispatch(fetchSimilarProducts(product._id));
     }
-  }, [product, dispatch]);
+  }, [dispatch, product]);
 
   useEffect(() => {
-    if (product && product.colors && product.colors.length > 0) {
-      const params = new URLSearchParams(location.search);
-      const selectedImageUrl = params.get("selectedImage");
-      if (selectedImageUrl) {
-        let found = false;
-        product.colors.forEach((color) => {
-          if (color.photos && color.photos.length > 0) {
-            const index = color.photos.findIndex(
-              (photo) => photo.url === selectedImageUrl
-            );
-            if (index !== -1) {
-              setSelectedColor(color.colorName);
-              setSelectedThumbnail(index);
-              found = true;
-            }
-          }
-        });
-        if (!found) {
-          setSelectedColor(product.colors[0].colorName);
-          setSelectedThumbnail(0);
-        }
-      }
+    const q = new URLSearchParams(location.search).get("selectedImage");
+    if (q && product?.colors) {
+      product.colors.forEach((c) => {
+        const idx = c.photos.findIndex((p) => p.url === q);
+        if (idx > -1) setThumbIndex(idx);
+      });
     }
   }, [location.search, product]);
 
-  const selectedVariant = product?.colors?.find(
-    (c) => c.colorName === selectedColor
-  );
-  const mainImageUrl =
-    selectedVariant && selectedVariant.photos &&  selectedVariant.photos.length > 0
-      ? selectedVariant.photos[selectedThumbnail]?.url
-      : product?.colors?.[0]?.photos?.[0]?.url ||
-      "https://via.placeholder.com/500";
-
-
- 
-
-
-  const isDuplicateInCart = product && cartItems.some(
-    (item) =>
-      item.productId === product._id &&
-      String(item.selectedColorName) === String(selectedColor) 
-  );
-
-  const isDuplicateInWishlist = product && wishlistItems.some(
-    (item) =>
-      item.productId === product._id &&
-      String(item.selectedColorName) === String(selectedColor) 
-  );
-
-  const handleAddToCart = () => {
-    if (!user) {
-      toast.error("Please log in to add items to your cart.");
-      return;
-    }
-    if (!selectedColor) {
-      toast.error("Please select a color before adding to cart.");
-      return;
-    }
-   
-    if (isDuplicateInCart) {
-      toast.info("Product is already in the cart.");
-      return;
-    }
-    const payload = {
-      userId: user._id,
-      productId: product._id,
-      quantity,
-      colorName: selectedColor,
-    };
-    dispatch(addToCart(payload))
-      .unwrap()
-      .then(() => {
-        toast.success("Item added to cart successfully! 🛒");
-      })
-      .catch((error) => {
-        toast.error(error?.message || "Failed to add item to cart.");
-      });
-  };
-
-  const handleAddToWishlist = () => {
-    if (!user) {
-      toast.error("Please log in to add items to your wishlist.");
-      return;
-    }
-   
-    if (!selectedColor) {
-      toast.error("Please select a color before adding to wishlist.");
-      return;
-    }
-
-    if (isDuplicateInWishlist) {
-      toast.info("Product is already in wishlist.");
-      return;
-    }
-    if (isDuplicateInCart) {
-      toast.info("Product is already in cart.");
-      return;
-    }
-    const payload = {
-      userId: user._id,
-      productId: product._id,
-      colorName: selectedColor,
-    };
-    dispatch(addToWishlist(payload))
-      .unwrap()
-      .then(() => {
-        toast.success("Item added to wishlist!");
-        dispatch(fetchWishlistItems(user._id))
-      })
-      .catch((err) => {
-        // err may be a string (from rejectWithValue) or an Error
-        const msg = typeof err === "string" ? err : err.message;
-        if (msg.toLowerCase().includes("already")) {
-          toast.info("Product is already in wishlist.");
-        } else {
-          toast.error(msg || "Failed to add item to wishlist.");
-        }
-      });
-  };
-
   if (loading)
     return (
-      <>
-        <Grid item md={5} sm={8} xs={12} lg={12} height={"100%"}>
-          <Stack spacing={"1rem"}>
-            {Array.from({ length: 18 }).map((_, index) => (
-              <Skeleton key={index} variant="rounded" height={"2rem"} />
+      <div className="max-w-7xl mx-auto p-8">
+        <Stack spacing={2}>
+          {Array(6)
+            .fill(0)
+            .map((_, i) => (
+              <Skeleton key={i} height={300} />
             ))}
-          </Stack>
-        </Grid>
-      </>
+        </Stack>
+      </div>
     );
-  if (error) return <p>Error: {error}</p>;
-  if (!product || !product.colors || product.colors.length === 0) {
-    return <p>No product found or no images available.</p>;
-  }
+  if (error)
+    return (
+      <p className="text-center p-8 text-red-500">
+        Error loading product.
+      </p>
+    );
+  if (!product) return null;
 
-  const categoryName = product.category?.name || "Category";
-  const subCategoryName = product.subcategory?.name || "Subcategory";
+  const variant = product.colors.find((c) => c.colorName === selectedColor);
+  const mainImg =
+    variant?.photos?.[thumbIndex]?.url || variant?.photos?.[0]?.url;
 
+  const inCart = cartItems.some(
+    (i) => i.productId === product._id && i.selectedColorName === selectedColor
+  );
+  const inWish = wishlistItems.some(
+    (i) => i.productId === product._id && i.selectedColorName === selectedColor
+  );
 
-
-
-
-  // SEO Meta and JSON-LD
-  const seoTitle = `${product.name} | Your Store`;
-  const seoDesc = product.description.replace(/<[^>]+>/g, '').slice(0, 160);
-  const schemaData = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    // image: variant.photos.map((p) => p.url),
-    description: seoDesc,
-    sku: product._id,
-    brand: product.brand || 'Your Brand',
-    offers: {
-      '@type': 'Offer',
-      // url: productUrl,
-      priceCurrency: 'INR',
-      price: product.price,
-      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: product.ratings || 0,
-      reviewCount: product.numOfReviews || 0,
-    },
+  const addCart = () => {
+    if (!user) return toast.error("Please log in first!");
+    if (!selectedColor) return toast.error("Please select a color!");
+    if (inCart) return toast.info("Already in cart");
+    dispatch(
+      addToCart({
+        userId: user._id,
+        productId: product._id,
+        quantity: qty,
+        colorName: selectedColor,
+      })
+    )
+      .unwrap()
+      .then(() => toast.success("Added to cart"))
+      .catch((e) => toast.error(e.message));
   };
+
+  const addWish = () => {
+    if (!user) return toast.error("Please log in first!");
+    if (!selectedColor) return toast.error("Please select a color!");
+    if (inWish) return toast.info("Already in wishlist");
+    dispatch(
+      addToWishlist({
+        userId: user._id,
+        productId: product._id,
+        colorName: selectedColor,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        toast.success("Added to wishlist");
+        dispatch(fetchWishlistItems(user._id));
+      })
+      .catch((e) => toast.error(e.message));
+  };
+
+
+
+
+  const features = [
+    { Icon: LockIcon, title: "Secure Transaction" },
+    { Icon: ReplayIcon, title: "Easy 7 Days Return" },
+    { Icon: LocalShippingIcon, title: "Delivery Guaranteed" },
+    { Icon: TrackChangesIcon, title: "Easy Order Tracking" },
+  ];
 
   return (
     <>
       <Helmet>
-        <title>{seoTitle}</title>
-        <meta name="description" content={seoDesc} />
-        <meta property="og:title" content={seoTitle} />
-        <meta property="og:description" content={seoDesc} />
-        <meta property="og:image" content={mainImageUrl} />
-        <script type="application/ld+json">
-          {JSON.stringify(schemaData)}
-        </script>
+        <title>{product.name} | Your Store</title>
+        <meta
+          name="description"
+          content={product.description.slice(0, 160)}
+        />
       </Helmet>
-      <div className="product-detailss">
-        <div className="product-details__container">
-          {/* Image Gallery */}
-          <div className="product-details__gallery">
-            <div className="product-details__main-image">
-              <div className="wishlist">
-                <FavoriteBorder onClick={handleAddToWishlist} />
-              </div>
-              <img src={mainImageUrl} alt="Selected Product" />
+
+      <section className="bg-gray-50 py-32 px-4 md:px-8 lg:px-16">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Gallery */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-shrink-0 flex space-x-4 overflow-x-auto lg:flex-col lg:space-x-0 lg:space-y-4">
+              {variant?.photos.map((p, i) => (
+                <img
+                  key={i}
+                  src={p.url}
+                  onClick={() => setThumbIndex(i)}
+                  className={`w-20 h-20 object-cover rounded cursor-pointer transition-transform ${thumbIndex === i
+                    ? "ring-2 ring-red-600 scale-105"
+                    : "opacity-70 hover:opacity-100"
+                    }`}
+                />
+              ))}
             </div>
-            {selectedVariant && selectedVariant.photos && selectedVariant.photos.length > 0 && (
-                <div className="product-details__thumbnails">
-                  {selectedVariant.photos.map((photo, index) => (
-                    <img
-                      key={index}
-                      src={photo.url}
-                      alt={`Thumbnail ${index + 1}`}
-                      className={`thumbnail ${selectedThumbnail === index ? "active" : ""
-                        }`}
-                      onClick={() => setSelectedThumbnail(index)}
-                    />
-                  ))}
-                </div>
-              )}
+            <div className="flex-1">
+              <div className="relative">
+                <button
+                  onClick={addWish}
+                  className="absolute right-4 top-4 bg-white p-2 rounded-full shadow hover:bg-red-50 transition"
+                >
+                  <FavoriteBorder
+                    className={`text-red-600 ${inWish && "opacity-50"}`}
+                  />
+                </button>
+                <img
+                  src={mainImg}
+                  alt={product.name}
+                  className="w-full h-auto rounded-lg shadow-lg"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Product Information */}
-          <div className="product-details__info">
-            <nav className="breadcrumb">
-              <Link to="/">Home</Link> &gt;{" "}
-              <Link to={`/products?category=${product.category?._id}`}>
-                {categoryName}
-              </Link>{" "}
-              &gt;{" "}
-              <Link to={`/products?subcategory=${product.subcategory?._id}`}>
-                {subCategoryName}
-              </Link>{" "}
-              &gt; <span>{product.name}</span>
+          {/* Info */}
+          <div className="space-y-6">
+
+            <nav
+              className="text-sm text-gray-600 mb-4"
+              aria-label="Breadcrumb"
+            >
+              <ol className="list-none p-0 inline-flex">
+                <li className="flex items-center">
+                  <Link to="/" className="hover:text-gray-800">
+                    Home
+                  </Link>
+                  <span className="mx-2">/</span>
+                </li>
+                <li className="flex items-center">
+                  <Link
+                    to={`/products?category=${product.category?._id}`}
+                    className="hover:text-gray-800"
+                  >
+                    {product.category?.name}
+                  </Link>
+                  <span className="mx-2">/</span>
+                </li>
+                <li className="flex items-center text-gray-500">
+                  <span>{product.name}</span>
+                </li>
+              </ol>
             </nav>
 
-            <h1 className="product-details__title">{product.name}</h1>
-            <div className="product-details__reviews">
-              <Rating value={product.ratings || 0} readOnly precision={0.5} />
-              <span>({product.numOfReviews} Reviews)</span>
-            </div>
-            <p className="product-details__price">${product.price?.toFixed(2)}</p>
 
-            {/* Choose Color */}
-            <div className="product-details__colors">
-              <p>Choose Color:</p>
-              <div className="product-details__color-options">
-                {product.colors.map((color, index) => (
-                  <div
-                    key={index}
-                    className="color-option"
-                    onClick={() => {
-                      setSelectedColor(color.colorName);
-                      setSelectedThumbnail(0);
-                    }}
-                  >
-                    <img
-                      src={
-                        color.colorImage ? color.colorImage.url
-                          : (color.photos && color.photos[0]?.url) ||
-                          "https://via.placeholder.com/30"
-                      }
-                      alt={color.colorName || `Color ${index + 1}`}
-                      className={`color-image ${selectedColor === color.colorName ? "selected" : ""
-                        }`}
-                    />
-                    <span className="color-name">{color.colorName}</span>
+            <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
+
+            <div className="flex items-center space-x-3">
+              <Rating value={product.ratings} readOnly size="small" />
+              <span className="text-gray-600">
+                ({product.numOfReviews} Reviews)
+              </span>
+            </div>
+
+            <p className="text-2xl font-semibold text-red-600">
+              ₹{product.price.toFixed(2)}
+            </p>
+
+
+            {/* Color picker */}
+            <div>
+              <p className="font-medium mb-2 flex items-center">
+                <span>Choose Color:</span>
+                {selectedColor && (
+                  <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-600 rounded text-sm">
+                    {selectedColor}
+                  </span>
+                )}
+              </p>
+              <div className="flex space-x-6">
+                {product.colors.map((c, idx) => (
+                  <div key={idx} className="flex flex-col items-center">
+                    <button
+                      onClick={() => {
+                        setSelectedColor(c.colorName);
+                        setThumbIndex(0);
+                      }}
+                      className={`
+            w-10 h-10 rounded-full border-2 overflow-hidden transition-transform
+            ${selectedColor === c.colorName
+                          ? "border-red-600 scale-110"
+                          : "border-gray-300"}
+          `}
+                    >
+                      <img
+                        src={c.colorImage?.url || c.photos?.[0]?.url}
+                        alt={c.colorName}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                    <span className="mt-1 text-sm text-gray-700">{c.colorName}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-           
 
-            {/* Quantity */}
-            <div className="product-details_quantity">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>
-                -
-              </button>
-              <span>{quantity}</span>
-              <button onClick={() => setQuantity(quantity + 1)}>+</button>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {features.map(({ Icon, title }) => (
+                <div
+                  key={title}
+                  className="flex flex-col items-center text-center p-4 bg-white rounded-xl shadow hover:shadow-lg transition"
+                >
+                  <Icon className="text-indigo-600 text-4xl mb-2" />
+                  <span className="mt-2 text-sm font-medium text-gray-700">
+                    {title}
+                  </span>
+                </div>
+              ))}
             </div>
 
-            <button
-              className="product-details__add-to-cart"
-              onClick={handleAddToCart}
-            >
-              Add to Cart
-            </button>
 
-            <div className="product-details__description">
-              <h3 onClick={() => setDescriptionOpen(!descriptionOpen)}>
-                Description
-                <span className="toggle-arrow">
-                  {descriptionOpen ? <Remove /> : <Add />}
-                </span>
-              </h3>
-              {descriptionOpen && (
+            {/* Quantity + Actions */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center border rounded">
+                <button
+                  onClick={() => setQty(Math.max(1, qty - 1))}
+                  className="px-3 py-1 hover:bg-gray-100"
+                >
+                  <Remove />
+                </button>
+                <span className="px-4">{qty}</span>
+                <button
+                  onClick={() => setQty(qty + 1)}
+                  className="px-3 py-1 hover:bg-gray-100"
+                >
+                  <Add />
+                </button>
+              </div>
+              <button
+                onClick={addCart}
+                disabled={inCart}
+                className={`px-6 py-2 rounded-md text-white ${inCart
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+                  } transition`}
+              >
+                {inCart ? "In Cart" : "Add to Cart"}
+              </button>
+            </div>
+
+
+
+
+            {/* Description Accordion */}
+            <div className="border-t pt-4">
+              <button
+                onClick={() => setShowDesc(!showDesc)}
+                className="flex justify-between w-full text-left font-medium text-gray-800"
+              >
+                <span>Description</span>
+                {showDesc ? <Remove /> : <Add />}
+              </button>
+              {showDesc && (
                 <div
-                  className="description-content"
+                  className="prose max-w-none mt-3 text-gray-700"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               )}
@@ -337,150 +371,23 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        <SimilarProduct />
-
-        {/* Reviews Section */}
-        <div className="product-details__reviews-section">
-          <h2>Customer Reviews</h2>
-          {!product.reviews || product.reviews.length === 0 ? (
-            <p>No reviews available.</p>
-          ) : (
-            product.reviews.map((review) => (
-              <ReviewItem key={review._id} review={review} />
-            ))
-          )}
+        {/* Similar Products */}
+        <div className="mt-16">
+          <SimilarProduct />
         </div>
-      </div>
+
+        {/* Customer Reviews */}
+        <section className="max-w-7xl mx-auto px-4 lg:px-16 mt-16">
+          <h2 className="text-2xl font-semibold mb-6">Customer Reviews</h2>
+          {product.reviews?.length ? (
+            product.reviews.map((r) => (
+              <ReviewItem key={r._id} review={r} />
+            ))
+          ) : (
+            <p className="text-center text-gray-500">No reviews available.</p>
+          )}
+        </section>
+      </section>
     </>
   );
-};
-
-export default ProductDetails;
-
-// Helper Component to render individual review with read more functionality
-const ReviewItem = ({ review }) => {
-  const [expanded, setExpanded] = useState(false);
-  const threshold = 150; // Number of characters before truncation
-
-  const commentText =
-    review.comment.length > threshold && !expanded
-      ? review.comment.substring(0, threshold) + "..."
-      : review.comment;
-
-  return (
-    <div className="review" style={{ marginBottom: "1rem" }}>
-      <div
-        className="review-card"
-        style={{
-          backgroundColor: "#f9f9f9",
-          borderRadius: "8px",
-          padding: "1.5rem",
-          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.08)",
-        }}
-      >
-        <div
-          className="review-header"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "0.75rem",
-          }}
-        >
-          <img
-            src={
-              review.user && review.user.avatar && review.user.avatar.length > 0
-                ? review.user.avatar[0].url
-                : "/default-user.png"
-            }
-            alt={review.user && review.user.name ? review.user.name : "User"}
-            className="review-user-photo"
-            style={{
-              width: "50px",
-              height: "50px",
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "2px solid #c8102e",
-              marginRight: "1rem",
-            }}
-          />
-          <div
-            className="review-info"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-            }}
-          >
-            <span
-              className="review-username"
-              style={{ fontSize: "1rem", fontWeight: "600", color: "#333" }}
-            >
-              {review.user && review.user.name ? review.user.name : "Anonymous"}
-            </span>
-            <Rating
-              value={review.rating}
-              readOnly
-              precision={0.5}
-              size="small"
-              style={{ marginTop: "0.25rem" }}
-            />
-          </div>
-        </div>
-        <p
-          className="review-comment"
-          style={{
-            fontSize: "0.95rem",
-            color: "#555",
-            lineHeight: "1.45",
-            display: "",
-          }}
-        >
-          {commentText}
-        </p>
-        {review.comment.length > threshold && !expanded && (
-          <button
-            onClick={() => setExpanded(true)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#c8102e",
-              cursor: "pointer",
-              padding: 0,
-              fontSize: "0.9rem",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Read more...
-          </button>
-        )}
-        {expanded && review.comment.length > threshold && (
-          <button
-            onClick={() => setExpanded(false)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#c8102e",
-              cursor: "pointer",
-              padding: 0,
-              fontSize: "0.9rem",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Show less
-          </button>
-        )}
-        <span
-          className="review-date"
-          style={{ fontSize: "0.85rem", color: "#aaa", textAlign: "right" }}
-        >
-          {new Date(review.createdAt).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })}
-        </span>
-      </div>
-    </div>
-
-  );
-};
+}
