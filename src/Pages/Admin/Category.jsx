@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaTrash, FaEdit, FaTags, FaTag } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { toast } from 'react-toastify';
-import AdminSidebar from '../../Components/Admin/AdminSidebar';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import AdminSidebar from '../../Components/Admin/AdminSidebar';
 import {
   fetchCategories,
   addCategory,
@@ -29,12 +30,36 @@ const Category = () => {
   const [parentCat, setParentCat] = useState('');
   const [editSub, setEditSub] = useState(null);
 
-  // Fetch categories on mount
+  // Delete modals state
+  const [deleteCatModal, setDeleteCatModal] = useState({
+    isOpen: false,
+    id: null,
+    name: ''
+  });
+  const [deleteSubModal, setDeleteSubModal] = useState({
+    isOpen: false,
+    id: null,
+    name: ''
+  });
+
+  // track sidebar collapse
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === null ? window.innerWidth < 1024 : JSON.parse(saved);
+  });
+
+  useEffect(() => {
+    // update on toggle
+    const onToggle = e => setCollapsed(e.detail);
+    window.addEventListener('sidebar-collapsed', onToggle);
+    return () => window.removeEventListener('sidebar-collapsed', onToggle);
+  }, []);
+
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  // Handlers
+  // Forms
   const resetCatForm = () => {
     setCatName(''); setCatImage(null); setEditCat(null);
   };
@@ -79,26 +104,47 @@ const Category = () => {
     resetSubForm();
   };
 
-  const removeCat = async id => {
-    if (!window.confirm('Delete this category?')) return;
-    await dispatch(deleteCategory(id)).unwrap();
-    toast.success('Category deleted');
-    dispatch(fetchCategories());
+  // Open/close delete modals
+  const openDeleteCatModal = (id, name) =>
+    setDeleteCatModal({ isOpen: true, id, name });
+  const closeDeleteCatModal = () =>
+    setDeleteCatModal({ isOpen: false, id: null, name: '' });
+
+  const openDeleteSubModal = (id, name) =>
+    setDeleteSubModal({ isOpen: true, id, name });
+  const closeDeleteSubModal = () =>
+    setDeleteSubModal({ isOpen: false, id: null, name: '' });
+
+  // Confirm delete actions
+  const confirmDeleteCategory = async () => {
+    try {
+      await dispatch(deleteCategory(deleteCatModal.id)).unwrap();
+      toast.success(`Deleted category "${deleteCatModal.name}"`);
+      dispatch(fetchCategories());
+    } catch (err) {
+      toast.error(`Delete failed: ${err.message || err}`);
+    } finally {
+      closeDeleteCatModal();
+    }
+  };
+  const confirmDeleteSub = async () => {
+    try {
+      await dispatch(deleteSubCategory(deleteSubModal.id)).unwrap();
+      toast.success(`Deleted subcategory "${deleteSubModal.name}"`);
+      dispatch(fetchCategories());
+    } catch (err) {
+      toast.error(`Delete failed: ${err.message || err}`);
+    } finally {
+      closeDeleteSubModal();
+    }
   };
 
-  const removeSub = async id => {
-    if (!window.confirm('Delete this subcategory?')) return;
-    await dispatch(deleteSubCategory(id)).unwrap();
-    toast.success('Subcategory deleted');
-    dispatch(fetchCategories());
-  };
-
+  // Edit handlers
   const handleEditCat = cat => {
     setEditCat(cat);
     setCatName(cat.name);
     setCatImage(null);
   };
-
   const handleEditSub = (sub, catId) => {
     setEditSub(sub);
     setSubName(sub.name);
@@ -108,10 +154,16 @@ const Category = () => {
   return (
     <div className="flex bg-gray-50 min-h-screen">
       <AdminSidebar />
+      <ToastContainer position="top-right" />
 
-      <main className="flex-1 p-6 lg:p-8 pl-[64px] lg:pl-[258px] overflow-auto">
+      <main
+        className={
+          `relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] ` +
+          (collapsed ? 'lg:pl-[100px]' : 'lg:pl-[260px]')
+        }
+      >
         <div className="max-w-5xl mx-auto grid gap-8 lg:grid-cols-2">
-          {/* Categories Card */}
+          {/* Categories */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -150,7 +202,9 @@ const Category = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className={`w-max px-6 py-2 rounded-full text-white ${editCat ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700'
+                  className={`w-max px-6 py-2 rounded-full text-white ${editCat
+                      ? 'bg-yellow-500 hover:bg-yellow-600'
+                      : 'bg-blue-600 hover:bg-blue-700'
                     }`}
                 >
                   {editCat ? 'Update Category' : 'Add Category'}
@@ -166,10 +220,7 @@ const Category = () => {
                 <motion.div
                   initial="hidden"
                   animate="visible"
-                  variants={{
-                    hidden: {},
-                    visible: { transition: { staggerChildren: 0.1 } }
-                  }}
+                  variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
                   className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
                 >
                   {categories.map(cat => (
@@ -197,7 +248,7 @@ const Category = () => {
                           <FaEdit />
                         </button>
                         <button
-                          onClick={() => removeCat(cat._id)}
+                          onClick={() => openDeleteCatModal(cat._id, cat.name)}
                           className="text-red-500 hover:text-red-600"
                         >
                           <FaTrash />
@@ -210,7 +261,7 @@ const Category = () => {
             </div>
           </motion.section>
 
-          {/* Subcategories Card */}
+          {/* Subcategories */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -235,7 +286,9 @@ const Category = () => {
                   >
                     <option value="">Select category</option>
                     {categories.map(cat => (
-                      <option key={cat._id} value={cat._id}>{cat.name}</option>
+                      <option key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -254,7 +307,9 @@ const Category = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className={`w-max px-6 py-2 rounded-full text-white ${editSub ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-600 hover:bg-green-700'
+                  className={`w-max px-6 py-2 rounded-full text-white ${editSub
+                      ? 'bg-yellow-500 hover:bg-yellow-600'
+                      : 'bg-green-600 hover:bg-green-700'
                     }`}
                 >
                   {editSub ? 'Update Subcategory' : 'Add Subcategory'}
@@ -268,13 +323,10 @@ const Category = () => {
                 <motion.ul
                   initial="hidden"
                   animate="visible"
-                  variants={{
-                    hidden: {},
-                    visible: { transition: { staggerChildren: 0.1 } }
-                  }}
+                  variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
                   className="space-y-4"
                 >
-                  {categories.map(cat =>
+                  {categories.flatMap(cat =>
                     cat.subcategories?.map(sub => (
                       <motion.li
                         key={sub._id}
@@ -297,7 +349,7 @@ const Category = () => {
                             <FaEdit />
                           </button>
                           <button
-                            onClick={() => removeSub(sub._id)}
+                            onClick={() => openDeleteSubModal(sub._id, sub.name)}
                             className="text-red-500 hover:text-red-600"
                           >
                             <FaTrash />
@@ -311,6 +363,58 @@ const Category = () => {
             </div>
           </motion.section>
         </div>
+
+        {/* Delete Category Modal */}
+        {deleteCatModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <h3 className="text-xl font-semibold mb-4">
+                Delete category “{deleteCatModal.name}”?
+              </h3>
+              <p className="text-gray-700">This action cannot be undone.</p>
+              <div className="mt-6 flex justify-end space-x-4">
+                <button
+                  onClick={closeDeleteCatModal}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteCategory}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Subcategory Modal */}
+        {deleteSubModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <h3 className="text-xl font-semibold mb-4">
+                Delete subcategory “{deleteSubModal.name}”?
+              </h3>
+              <p className="text-gray-700">This action cannot be undone.</p>
+              <div className="mt-6 flex justify-end space-x-4">
+                <button
+                  onClick={closeDeleteSubModal}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteSub}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

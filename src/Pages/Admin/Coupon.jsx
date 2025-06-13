@@ -1,8 +1,7 @@
 // src/pages/Admin/Coupons.jsx
-import React, { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
-import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,18 +13,49 @@ export default function Coupons() {
   const dispatch = useDispatch();
   const { coupons, loading, error } = useSelector((s) => s.coupons);
 
+  // State for delete-confirm modal
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    couponId: null,
+    couponCode: '',
+  });
+
+
+  // track sidebar collapse
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === null ? window.innerWidth < 1024 : JSON.parse(saved);
+  });
+
+  useEffect(() => {
+    // update on toggle
+    const onToggle = e => setCollapsed(e.detail);
+    window.addEventListener('sidebar-collapsed', onToggle);
+    return () => window.removeEventListener('sidebar-collapsed', onToggle);
+  }, []);
+
+
+
   useEffect(() => {
     dispatch(fetchCoupons());
   }, [dispatch]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this coupon?')) return;
+  const openDeleteModal = (id, code) => {
+    setDeleteModal({ isOpen: true, couponId: id, couponCode: code });
+  };
+  const closeDeleteModal = () => {
+    setDeleteModal({ isOpen: false, couponId: null, couponCode: '' });
+  };
+
+  const confirmDeleteCoupon = async () => {
     try {
-      await dispatch(deleteCoupon(id)).unwrap();
-      toast.success('Coupon deleted');
+      await dispatch(deleteCoupon(deleteModal.couponId)).unwrap();
+      toast.success(`Deleted coupon “${deleteModal.couponCode}”`);
       dispatch(fetchCoupons());
     } catch (err) {
       toast.error(`Failed to delete: ${err.message || err}`);
+    } finally {
+      closeDeleteModal();
     }
   };
 
@@ -33,7 +63,12 @@ export default function Coupons() {
     <div className="flex bg-gray-50 min-h-screen">
       <AdminSidebar />
 
-      <main className="relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] lg:pl-[258px]">
+      <main
+        className={
+          `relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] ` +
+          (collapsed ? 'lg:pl-[100px]' : 'lg:pl-[260px]')
+        }
+      >
         <ToastContainer position="top-right" />
 
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Coupons</h1>
@@ -96,7 +131,7 @@ export default function Coupons() {
                         <FaEdit />
                       </Link>
                       <button
-                        onClick={() => handleDelete(c._id)}
+                        onClick={() => openDeleteModal(c._id, c.code)}
                         className="text-red-600 hover:text-red-800"
                         title="Delete"
                       >
@@ -110,16 +145,31 @@ export default function Coupons() {
           </div>
         )}
 
-        {/* Floating Add Button */}
-        {/* <motion.div whileHover={{ scale: 1.1 }} className="fixed bottom-8 right-8 z-50 ">
-          <Link
-            to="/admin/coupons/new"
-            className="bg-purple-500 hover:bg-yellow-600 text-white p-4 rounded-full shadow-lg"
-            title="Create Coupon"
-          >
-            <FaPlus size={13} />
-          </Link>
-        </motion.div> */}
+        {/* Delete Confirmation Modal */}
+        {deleteModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <h3 className="text-xl font-semibold mb-4">
+                Delete coupon “{deleteModal.couponCode}”?
+              </h3>
+              <p className="text-gray-700">This action cannot be undone.</p>
+              <div className="mt-6 flex justify-end space-x-4">
+                <button
+                  onClick={closeDeleteModal}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteCoupon}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

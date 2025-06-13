@@ -4,10 +4,11 @@ import NewArrivalProduct from './HomeNewArrivalProduct/NewArrivalProduct';
 import SecondBanner from './SecondBanner/SecondBanner';
 import Category from './Category/Category';
 import ThirdBanner from './ThirdBanner/ThirdBanner';
+import Popup from '../../Components/Layout/Popup';
 
 const Home = () => {
     const siteTitle = 'Home Bloodbuck - Premium Products & Deals';
-    const siteDescription = 'Discover the latest in electronics, fashion, home & more. Shop top brands with exclusive deals and free shipping.';
+    const siteDescription = 'Discover the latest in fashion bags, purse, home & more. Shop top brands with exclusive deals and free shipping.';
     const siteUrl = 'https://www.yourdomain.com/';
     const siteImage = `${siteUrl}images/og-home.jpg`;
 
@@ -54,6 +55,7 @@ const Home = () => {
                     {JSON.stringify(structuredData)}
                 </script>
             </Helmet>
+            <Popup />
             <Banner />
             <Category />
             <NewArrivalProduct />

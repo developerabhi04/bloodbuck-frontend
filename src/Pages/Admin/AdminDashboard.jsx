@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { HiTrendingUp, HiTrendingDown } from 'react-icons/hi';
 import { motion } from 'framer-motion';
@@ -13,7 +13,7 @@ import {
     fetchLineCharts,
 } from '../../redux/slices/AdminChartSlices';
 import AdminSidebar from '../../Components/Admin/AdminSidebar';
-import Loadertwo from '../../components/Loader/Loadertwo';
+// import Loadertwo from '../../components/Loader/Loadertwo';
 
 const gradientMap = {
     revenue: 'from-blue-500 to-indigo-600',
@@ -24,7 +24,7 @@ const gradientMap = {
 
 const AdminDashboard = () => {
     const dispatch = useDispatch();
-    const { stats, pieCharts, barCharts, loading, error } = useSelector(
+    const { stats, pieCharts, barCharts, error } = useSelector(
         (s) => s.dashboard
     );
 
@@ -35,7 +35,21 @@ const AdminDashboard = () => {
         dispatch(fetchLineCharts());
     }, [dispatch]);
 
-    if (loading) return <Loadertwo />;
+
+    // track sidebar collapse
+    const [collapsed, setCollapsed] = useState(() => {
+        const saved = localStorage.getItem('sidebarCollapsed');
+        return saved === null ? window.innerWidth < 1024 : JSON.parse(saved);
+    });
+
+    useEffect(() => {
+        // update on toggle
+        const onToggle = e => setCollapsed(e.detail);
+        window.addEventListener('sidebar-collapsed', onToggle);
+        return () => window.removeEventListener('sidebar-collapsed', onToggle);
+    }, []);
+
+    // if (loading) return <Loadertwo />;
     if (error) return <p className="text-red-600 p-4">{error}</p>;
 
     const count = stats?.count ?? {};
@@ -56,8 +70,12 @@ const AdminDashboard = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="flex-1 p-6 overflow-auto pl-[64px] lg:pl-[258px]"
+                className={
+                    `relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] ` +
+                    (collapsed ? 'lg:pl-[100px]' : 'lg:pl-[260px]')
+                }
             >
+
                 {/* Stats */}
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                     {cards.map(({ key, label, value, prefix }) => (

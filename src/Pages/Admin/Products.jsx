@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { motion } from 'framer-motion';
@@ -12,18 +12,52 @@ export default function Products() {
   const dispatch = useDispatch();
   const { products, loading, error } = useSelector(s => s.products);
 
+  // Modal state for deleting a product
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    productId: null,
+    productName: '',
+  });
+
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  const handleDelete = async id => {
-    if (!window.confirm('Delete this product?')) return;
+
+  // track sidebar collapse
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === null ? window.innerWidth < 1024 : JSON.parse(saved);
+  });
+
+  useEffect(() => {
+    // update on toggle
+    const onToggle = e => setCollapsed(e.detail);
+    window.addEventListener('sidebar-collapsed', onToggle);
+    return () => window.removeEventListener('sidebar-collapsed', onToggle);
+  }, []);
+
+
+
+  // Open delete modal
+  const openDeleteModal = (id, name) => {
+    setDeleteModal({ isOpen: true, productId: id, productName: name });
+  };
+  const closeDeleteModal = () => {
+    setDeleteModal({ isOpen: false, productId: null, productName: '' });
+  };
+
+
+  // Confirm deletion
+  const confirmDeleteProduct = async () => {
     try {
-      await dispatch(deleteProduct(id)).unwrap();
-      toast.success('Product deleted');
+      await dispatch(deleteProduct(deleteModal.productId)).unwrap();
+      toast.success(`Deleted "${deleteModal.productName}"`);
       dispatch(fetchProducts());
     } catch (err) {
-      toast.error(`Delete failed: ${err}`);
+      toast.error(`Delete failed: ${err.message || err}`);
+    } finally {
+      closeDeleteModal();
     }
   };
 
@@ -31,7 +65,12 @@ export default function Products() {
     <div className="flex bg-gray-50 min-h-screen">
       <AdminSidebar />
 
-      <main className="flex-1 p-6 lg:p-8 relative lg:pl-[258px]">
+      <main
+        className={
+          `relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] ` +
+          (collapsed ? 'lg:pl-[100px]' : 'lg:pl-[260px]')
+        }
+      >
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Products</h1>
 
         {loading ? (
@@ -125,7 +164,9 @@ export default function Products() {
                           <FaEdit />
                         </Link>
                         <button
-                          onClick={() => handleDelete(product._id)}
+                          onClick={() =>
+                            openDeleteModal(product._id, product.name)
+                          }
                           className="text-red-600 hover:text-red-800"
                         >
                           <FaTrash />
@@ -151,6 +192,35 @@ export default function Products() {
             <FaPlus size={20} />
           </Link>
         </motion.div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+              <h3 className="text-xl font-semibold mb-4">
+                Delete “{deleteModal.productName}”?
+              </h3>
+              <p className="text-gray-700">
+                This action cannot be undone.
+              </p>
+              <div className="mt-6 flex justify-end space-x-4">
+                <button
+                  onClick={closeDeleteModal}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteProduct}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

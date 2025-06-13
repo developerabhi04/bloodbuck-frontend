@@ -14,7 +14,6 @@ import paymentReducer from "./slices/paymentSlices.js";
 import reviewReducer from "./slices/paymentSlices.js";
 import dashboardReducer from "./slices/AdminChartSlices.js";
 import bannerEventReducer from "./slices/BannerEventSlices.js";
-import productEventReducer from "./slices/ProductEventSlices.js";
 
 
 const store = configureStore({
@@ -35,7 +34,7 @@ const store = configureStore({
         review: reviewReducer,
         dashboard: dashboardReducer,
         bannerEvent: bannerEventReducer,
-        productEvent: productEventReducer,
+       
     },
 });
 

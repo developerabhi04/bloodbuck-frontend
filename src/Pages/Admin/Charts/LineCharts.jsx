@@ -1,75 +1,101 @@
+// src/pages/Admin/LineCharts.jsx
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import AdminSidebar from "../../../Components/Admin/AdminSidebar"
-import { LineChart } from "../../../Components/Admin/Chart"
-import { useEffect } from "react";
+import AdminSidebar from "../../../Components/Admin/AdminSidebar";
 import { fetchLineCharts } from "../../../redux/slices/AdminChartSlices";
-
-
-
-
+import { LineChart } from "../../../components/Admin/Chart";
 
 const LineCharts = () => {
-    const dispatch = useDispatch();
-    const { lineCharts } = useSelector((state) => state.dashboard);
+  const dispatch = useDispatch();
+  const { lineCharts, loading } = useSelector((state) => state.dashboard);
 
-    console.log(lineCharts)
+  useEffect(() => {
+    dispatch(fetchLineCharts());
+  }, [dispatch]);
 
+
+   // track sidebar collapse
+    const [collapsed, setCollapsed] = useState(() => {
+      const saved = localStorage.getItem('sidebarCollapsed');
+      return saved === null ? window.innerWidth < 1024 : JSON.parse(saved);
+    });
+  
     useEffect(() => {
-        dispatch(fetchLineCharts());
-    }, [dispatch]);
+      // update on toggle
+      const onToggle = e => setCollapsed(e.detail);
+      window.addEventListener('sidebar-collapsed', onToggle);
+      return () => window.removeEventListener('sidebar-collapsed', onToggle);
+    }, []);
 
-    return (
-        <div className="admin-container">
-            <AdminSidebar />
-            <main className="chart-container">
-                <h1>Line Charts</h1>
-                <section>
-                    <LineChart
-                        data={lineCharts?.users || []}
-                        label="Users"
-                        borderColor="rgb(53, 162, 255)"
-                        backgroundColor="rgba(53, 162, 255,0.5)"
-                        labels={lineCharts?.months || []}
-                    />
-                    <h2>Active Users</h2>
-                </section>
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      <AdminSidebar />
 
-                <section>
-                    <LineChart
-                        data={lineCharts?.products || []}
-                        backgroundColor={"hsla(269,80%,40%,0.4)"}
-                        borderColor={"hsl(269,80%,40%)"}
-                        label="Products"
-                        labels={lineCharts?.months}
-                    />
-                    <h2>Total Products (USD)</h2>
-                </section>
+      <main
+        className={
+          `relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] ` +
+          (collapsed ? 'lg:pl-[100px]' : 'lg:pl-[260px]')
+        }
+      >
+        <header className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">Analytics Dashboard</h1>
+          <nav className="text-sm text-gray-500 mt-1">Home / Analytics / Line Charts</nav>
+        </header>
 
-                <section>
-                    <LineChart
-                        data={lineCharts?.revenue || []}
-                        backgroundColor={"hsla(129,80%,40%,0.4)"}
-                        borderColor={"hsl(129,80%,40%)"}
-                        label="Revenue"
-                        labels={lineCharts?.months}
-                    />
-                    <h2>Total Revenue</h2>
-                </section>
+        {loading ? (
+          <p className="text-gray-600">Loading line charts...</p>
+        ) : lineCharts ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-lg font-medium text-gray-700 mb-4">Active Users</h2>
+              <LineChart
+                data={lineCharts.users || []}
+                label="Users"
+                borderColor="rgb(53, 162, 255)"
+                backgroundColor="rgba(53, 162, 255, 0.5)"
+                labels={lineCharts.months || []}
+              />
+            </div>
 
-                <section>
-                    <LineChart
-                        data={lineCharts?.discount || []}
-                        backgroundColor={"hsla(29,80%,40%,0.4)"}
-                        borderColor={"hsl(29,80%,40%)"}
-                        label="Discount"
-                        labels={lineCharts?.months}
-                    />
-                    <h2>Discount Allotted</h2>
-                </section>
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-lg font-medium text-gray-700 mb-4">Total Products (USD)</h2>
+              <LineChart
+                data={lineCharts.products || []}
+                label="Products"
+                borderColor="hsl(269,80%,40%)"
+                backgroundColor="hsla(269,80%,40%,0.4)"
+                labels={lineCharts.months || []}
+              />
+            </div>
 
-            </main>
-        </div>
-    )
-}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-lg font-medium text-gray-700 mb-4">Total Revenue</h2>
+              <LineChart
+                data={lineCharts.revenue || []}
+                label="Revenue"
+                borderColor="hsl(129,80%,40%)"
+                backgroundColor="hsla(129,80%,40%,0.4)"
+                labels={lineCharts.months || []}
+              />
+            </div>
 
-export default LineCharts
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-lg font-medium text-gray-700 mb-4">Discount Allotted</h2>
+              <LineChart
+                data={lineCharts.discount || []}
+                label="Discount"
+                borderColor="hsl(29,80%,40%)"
+                backgroundColor="hsla(29,80%,40%,0.4)"
+                labels={lineCharts.months || []}
+              />
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-600">No line chart data available.</p>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default LineCharts;

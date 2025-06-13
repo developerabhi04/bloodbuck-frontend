@@ -1,5 +1,5 @@
 // src/pages/Admin/Transaction.jsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, deleteOrder } from '../../redux/slices/orderSlices';
 import AdminSidebar from '../../Components/Admin/AdminSidebar';
@@ -11,6 +11,21 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function Transaction() {
   const dispatch = useDispatch();
   const { orders, loading, error } = useSelector(s => s.order);
+
+
+  // track sidebar collapse
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === null ? window.innerWidth < 1024 : JSON.parse(saved);
+  });
+
+  useEffect(() => {
+    // update on toggle
+    const onToggle = e => setCollapsed(e.detail);
+    window.addEventListener('sidebar-collapsed', onToggle);
+    return () => window.removeEventListener('sidebar-collapsed', onToggle);
+  }, []);
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toDeleteId, setToDeleteId] = useState(null);
@@ -44,7 +59,12 @@ export default function Transaction() {
     <div className="flex bg-gray-50 min-h-screen">
       <AdminSidebar />
 
-      <main className="relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] lg:pl-[258px]">
+      <main
+        className={
+          `relative flex-1 p-6 lg:p-8 overflow-auto pl-[64px] ` +
+          (collapsed ? 'lg:pl-[100px]' : 'lg:pl-[260px]')
+        }
+      >
         <ToastContainer />
 
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Transactions</h1>
@@ -86,8 +106,8 @@ export default function Transaction() {
                     order.status === 'Processing'
                       ? 'bg-yellow-100 text-yellow-800'
                       : order.status === 'Shipped'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-purple-100 text-purple-800';
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-purple-100 text-purple-800';
 
                   return (
                     <tr key={order._id} className="hover:bg-gray-50">

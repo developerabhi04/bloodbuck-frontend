@@ -4,7 +4,6 @@ import { ToastContainer } from "react-toastify";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import MainLayout from "./Components/Layout/MainLayout";
 import "react-toastify/dist/ReactToastify.css"; // ✅ Toastify CSS
-import Loadertwo from "./Components/Loader/Loadertwo";
 import NotFound from "./Components/Notfound";
 import ProductPage from "./Pages/Products/ProductCategory";
 import ScrollTop from "./Components/Loader/ScrollTop";
@@ -12,10 +11,7 @@ import ChatSupport from "./Pages/Order/Contact";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
 import FirstBanners from "./Pages/Admin/Management/Banner/FirstBanners";
-import Event from "./Pages/Events/Event";
-import EventPage from "./Pages/Admin/EventPage";
-import EventProductsCard from "./Pages/Admin/EventProductsCard";
-import EventBanner from "./Pages/Admin/EventBanner";
+import Loadertwo from "./components/Loader/Loadertwo";
 
 // Lazy load pages
 const Home = lazy(() => import("./Pages/Home/Home"));
@@ -108,13 +104,7 @@ const App = () => {
             </MainLayout>
           }
           />
-          <Route path="/event-campaign"
-            element={
-              <MainLayout>
-                <Event />
-              </MainLayout>
-            }
-          />
+
           <Route
             path="/product/:id"
             element={
@@ -285,30 +275,7 @@ const App = () => {
               </AdminRoute>
             }
           />
-          <Route
-            path="/admin/event"
-            element={
-              <AdminRoute>
-                <EventPage />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/event-banner"
-            element={
-              <AdminRoute>
-                <EventBanner />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/event-product-card"
-            element={
-              <AdminRoute>
-                <EventProductsCard />
-              </AdminRoute>
-            }
-          />
+
           <Route
             path="/admin/banner/first-banner-seconds"
             element={

@@ -27,9 +27,10 @@ ChartJS.register(
 );
 
 
-const months = ["January", "February", "March", "April", "May", "June", "July"];
+const defaultMonths = ["January", "February", "March", "April", "May", "June", "July"];
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+// BarChart Component
 // BarChart Component
 export const BarChart = ({
   data_1 = [],
@@ -39,32 +40,18 @@ export const BarChart = ({
   bgColor_1,
   bgColor_2,
   horizontal = false,
-  labels = months,
+  labels = defaultMonths,
 }) => {
   const options = {
     responsive: true,
     indexAxis: horizontal ? "y" : "x",
     plugins: {
-      legend: {
-        display: true,
-      },
-      title: {
-        display: true,
-      },
+      legend: { display: true, position: 'bottom' },
+      title: { display: false }
     },
     scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          display: false,
-        },
-      },
-      x: {
-        beginAtZero: true,
-        grid: {
-          display: false,
-        },
-      },
+      y: { beginAtZero: true, grid: { display: false } },
+      x: { beginAtZero: true, grid: { display: false } }
     },
   };
 
@@ -79,130 +66,42 @@ export const BarChart = ({
         barPercentage: 1,
         categoryPercentage: 0.4,
       },
-      {
-        label: title_2,
-        data: data_2,
-        backgroundColor: bgColor_2,
-        barThickness: "flex",
-        barPercentage: 1,
-        categoryPercentage: 0.4,
-      },
+      ...(data_2.length > 0
+        ? [{
+            label: title_2,
+            data: data_2,
+            backgroundColor: bgColor_2,
+            barThickness: "flex",
+            barPercentage: 1,
+            categoryPercentage: 0.4,
+          }]
+        : []),
     ],
   };
 
-  return <Bar width={horizontal ? "200%" : ""} options={options} data={data} />;
+  return (
+    <div className="w-full overflow-x-auto">
+      <Bar className="w-full" options={options} data={data} />
+    </div>
+  );
 };
 
-// DoughnutChart Component
-export const DoughnutChart = ({
-  labels,
-  data,
-  backgroundColor,
-  cutout,
-  legends = true,
-  offset,
-}) => {
-  const doughnutData = {
-    labels,
-    datasets: [
-      {
-        data,
-        backgroundColor,
-        borderWidth: 0,
-        offset,
-      },
-    ],
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: legends,
-        position: "bottom",
-        labels: {
-          padding: 40,
-        },
-      },
-    },
-    cutout,
-  };
-
+// Other chart components remain unchanged
+export const DoughnutChart = ({ labels, data, backgroundColor, cutout, legends = true, offset }) => {
+  const doughnutData = { labels, datasets: [{ data, backgroundColor, borderWidth: 0, offset }] };
+  const doughnutOptions = { responsive: true, plugins: { legend: { display: legends, position: "bottom", labels: { padding: 20 } } }, cutout };
   return <Doughnut data={doughnutData} options={doughnutOptions} />;
 };
 
-// PieChart Component
 export const PieChart = ({ labels, data, backgroundColor, offset }) => {
-  const pieChartData = {
-    labels,
-    datasets: [
-      {
-        data,
-        backgroundColor,
-        borderWidth: 0,
-        offset,
-      },
-    ],
-  };
-
-  const pieChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false,
-      },
-    },
-  };
-
-  return <Pie data={pieChartData} options={pieChartOptions} />;
+  const pieData = { labels, datasets: [{ data, backgroundColor, borderWidth: 0, offset }] };
+  const pieOptions = { responsive: true, plugins: { legend: { display: false } } };
+  return <Pie data={pieData} options={pieOptions} />;
 };
 
-// LineChart Component
-export const LineChart = ({
-  data,
-  label,
-  backgroundColor,
-  borderColor,
-  labels = months,
-}) => {
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: true,
-      },
-      title: {
-        display: true,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          display: false,
-        },
-      },
-      x: {
-        beginAtZero: true,
-        grid: {
-          display: false,
-        },
-      },
-    },
-  };
-
-  const lineChartData = {
-    labels,
-    datasets: [
-      {
-        fill: true,
-        label,
-        data,
-        backgroundColor,
-        borderColor,
-      },
-    ],
-  };
-
-  return <Line options={options} data={lineChartData} />;
+export const LineChart = ({ data, label, backgroundColor, borderColor, labels = defaultMonths }) => {
+  const options = { responsive: true, plugins: { legend: { display: true }, title: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { beginAtZero: true, grid: { display: false } } } };
+  const lineData = { labels, datasets: [{ fill: true, label, data, backgroundColor, borderColor }] };
+  return <Line options={options} data={lineData} />;
 };
+

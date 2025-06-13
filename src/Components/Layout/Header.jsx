@@ -41,17 +41,51 @@ import { logout } from "../../redux/slices/userSlices";
 import { fetchLiveSearchProducts } from "../../redux/slices/productSlices";
 import { toast } from "react-toastify";
 
+import { motion, AnimatePresence } from 'framer-motion';
+
+const messages = [
+  'FREE SHIPPING ON ORDERS OVER $50',
+  'NEW ARRIVALS UP TO 30% OFF',
+  'SIGN UP & GET 10% OFF YOUR FIRST ORDER',
+  'LIMITED TIME: BUY 2, GET 1 FREE',
+];
+
 const TopNav = ({ showTopNav }) => {
+  const [index, setIndex] = useState(0);
+
+  // cycle every 4s
+  useEffect(() => {
+    if (!showTopNav) return;
+    const id = setInterval(
+      () => setIndex(i => (i + 1) % messages.length),
+      4000
+    );
+    return () => clearInterval(id);
+  }, [showTopNav]);
+
   if (!showTopNav) return null;
 
   return (
-    <nav className="bg-gray-900 py-1 text-white">
-      <div className="flex justify-center">
-        <span className="text-sm font-medium">FREE SHIPPING ON ORDERS OVER $50</span>
+    <nav className="bg-gray-900 py-2 text-white overflow-hidden">
+      <div className="flex justify-center h-6 relative">
+        <AnimatePresence exitBeforeEnter>
+          <motion.span
+            key={index}
+            className="text-sm font-medium absolute"
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            transition={{ duration: 0.5 }}
+          >
+            {messages[index]}
+          </motion.span>
+        </AnimatePresence>
       </div>
     </nav>
   );
 };
+
+
 
 const IconSection = () => {
   const dispatch = useDispatch();
