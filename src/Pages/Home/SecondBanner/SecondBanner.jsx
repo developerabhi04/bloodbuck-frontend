@@ -19,7 +19,7 @@ const SecondBanner = () => {
     return (
         <section className="py-16 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4">
-                <h2 className="text-3xl font-semibold text-center text-gray-800 mb-12">
+                <h2 className="text-3xl tracking-[6px] font-sans uppercase text-center text-gray-800 mb-12">
                     Featured Collection
                 </h2>
 
@@ -43,7 +43,7 @@ const SecondBanner = () => {
                                     )}
                                     <button
                                         onClick={handleNavigate}
-                                        className="mt-4 inline-block bg-white text-black font-medium py-2 px-5 rounded-full shadow-md hover:bg-gray-200 transition-colors"
+                                        className="mt-4 inline-block bg-white tracking-[3px] font-sans uppercase text-black font-medium py-2 px-5 rounded-full shadow-md hover:bg-gray-200 transition-colors"
                                     >
                                         Shop Now
                                     </button>
@@ -67,7 +67,7 @@ const SecondBanner = () => {
                                     )}
                                     <button
                                         onClick={handleNavigate}
-                                        className="mt-4 inline-block bg-white text-black font-medium py-2 px-5 rounded-full shadow-md hover:bg-gray-200 transition-colors"
+                                        className="mt-4 tracking-[4px] font-sans uppercase inline-block bg-white text-black font-medium py-2 px-5 rounded-full shadow-md hover:bg-gray-200 transition-colors"
                                     >
                                         Shop Now
                                     </button>

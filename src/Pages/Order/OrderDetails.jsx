@@ -190,7 +190,7 @@ const OrderDetails = () => {
                           {item.name}
                         </h3>
                         <p className="text-gray-500">
-                          Size: {item.selectedSize || item.selectedSeamSize}{" "}
+                          {" "}
                           | Color: {item.selectedColorName || "N/A"}
                         </p>
                         <p className="text-gray-500">Qty: {item.quantity}</p>

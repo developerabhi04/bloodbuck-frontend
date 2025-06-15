@@ -1,11 +1,9 @@
-// src/Components/Layout/Header.jsx
 import { useState, useEffect, Fragment, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCompanyInfo,
 } from "../../redux/slices/companyDetailsSlices";
-import { fetchWishlistItems } from "../../redux/slices/wishlistSlices";
 import { fetchCartItems } from "../../redux/slices/cartSlices";
 import { fetchCategories } from "../../redux/slices/categorySlices";
 import { fetchBanners } from "../../redux/slices/BannerEventSlices";
@@ -25,26 +23,27 @@ import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import { Facebook, Instagram, Twitter } from "@mui/icons-material";
 
 import {
   Search,
   Person,
-  Favorite,
   ShoppingBag,
-  Face,
   Login,
   Logout,
   PersonAdd,
+  Favorite,
+  Person2,
+  Facebook,
+  Instagram,
+  Twitter,
 } from "@mui/icons-material";
 import { logout } from "../../redux/slices/userSlices";
 import { fetchLiveSearchProducts } from "../../redux/slices/productSlices";
 import { toast } from "react-toastify";
-
 import { motion, AnimatePresence } from 'framer-motion';
 
 const messages = [
-  'FREE SHIPPING ON ORDERS OVER $50',
+  'FREE SHIPPING ON ORDERS OVER ₹50',
   'NEW ARRIVALS UP TO 30% OFF',
   'SIGN UP & GET 10% OFF YOUR FIRST ORDER',
   'LIMITED TIME: BUY 2, GET 1 FREE',
@@ -66,12 +65,12 @@ const TopNav = ({ showTopNav }) => {
   if (!showTopNav) return null;
 
   return (
-    <nav className="bg-gray-900 py-2 text-white overflow-hidden">
-      <div className="flex justify-center h-6 relative">
+    <nav className="bg-gray-900 py-1 text-white overflow-hidden ">
+      <div className="flex justify-center h-5 relative">
         <AnimatePresence exitBeforeEnter>
           <motion.span
             key={index}
-            className="text-sm font-medium absolute"
+            className="text-[13px] absolute tracking-[3px] font-sans uppercase"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
@@ -91,7 +90,6 @@ const IconSection = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
-  const { wishlistItems } = useSelector((state) => state.wishlist);
   const { cartItems = [] } = useSelector((state) => state.shopCart);
   const { liveSearchResults, searchLoading } = useSelector(
     (state) => state.products
@@ -106,7 +104,6 @@ const IconSection = () => {
 
   useEffect(() => {
     if (user?.id) {
-      dispatch(fetchWishlistItems(user.id));
       dispatch(fetchCartItems(user.id));
     }
   }, [dispatch, user]);
@@ -177,11 +174,11 @@ const IconSection = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
             placeholder="Search products..."
-            className="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
           />
           <button
             onClick={handleSearchSubmit}
-            className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-r-lg transition-colors"
+            className="bg-gray-060 hover:gray-800 text-white p-3 rounded-r-lg transition-colors"
           >
             <Search />
           </button>
@@ -222,53 +219,69 @@ const IconSection = () => {
       ) : (
         <button
           onClick={() => setShowSearch(true)}
-          className="text-gray-700 hover:text-blue-600 transition-colors"
+          className="text-gray-700 hover:text-gray-600 transition-colors"
           aria-label="Search"
         >
           <Search />
         </button>
       )}
 
+
       {/* Profile */}
       <div className="relative" ref={profileRef}>
         <button
           onClick={() => setShowProfile((v) => !v)}
-          className="text-gray-700 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-full bg-white shadow hover:shadow-md transition-all text-gray-700 hover:text-gray-600"
           aria-label="Profile"
         >
           <Person />
+          {user?.name && <span className="hidden sm:inline font-medium tracking-[2px] font-sans uppercase">{user.name.split(" ")[0]}</span>}
         </button>
+
         {showProfile && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50 border border-gray-100">
-            <ul className="space-y-1">
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl ring-1 ring-gray-200 z-50 overflow-hidden animate-fade-in">
+            <ul className="py-2 divide-y divide-gray-100 text-sm">
               {user ? (
                 <>
                   <li>
                     <Link
                       to="/profile"
-                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center gap-2 px-4 py-3 text-gray-800 hover:bg-gray-50 transition tracking-[2px] font-sans uppercase"
                       onClick={() => setShowProfile(false)}
                     >
-                      <Face className="mr-2 text-gray-500" />
+                      <Person2 className="text-indigo-500" />
                       Profile
                     </Link>
                   </li>
+
+                  <li>
+                    <Link
+                      to="/wishlist"
+                      className="flex items-center gap-2 px-4 py-3 text-gray-800 hover:bg-gray-50 transition tracking-[2px] font-sans uppercase"
+                      onClick={() => setShowProfile(false)}
+                    >
+                      <Favorite className="text-pink-500" />
+                      Wishlist
+                    </Link>
+                  </li>
+
                   <li>
                     <Link
                       to="/orders"
-                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center gap-2 px-4 py-3 text-gray-800 hover:bg-gray-50 transition tracking-[2px] font-sans uppercase"
                       onClick={() => setShowProfile(false)}
                     >
-                      <ShoppingBag className="mr-2 text-gray-500" />
+                      <ShoppingBag className="text-green-600" />
                       Orders
                     </Link>
                   </li>
+
                   <li>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 w-full transition tracking-[2px] font-sans uppercase"
                     >
-                      <Logout className="mr-2 text-gray-500" />
+                      <Logout className="text-red-500" />
                       Logout
                     </button>
                   </li>
@@ -278,53 +291,39 @@ const IconSection = () => {
                   <li>
                     <Link
                       to="/sign-in"
-                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center gap-2 px-4 py-3 text-gray-800 hover:bg-gray-50 transition tracking-[2px] font-sans uppercase"
                       onClick={() => setShowProfile(false)}
                     >
-                      <Login className="mr-2 text-gray-500" />
+                      <Login className="text-gray-500 " />
                       Sign In
                     </Link>
                   </li>
+
                   <li>
                     <Link
                       to="/sign-up"
-                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="flex items-center gap-2 px-4 py-3 text-gray-800 hover:bg-gray-50 transition tracking-[3px] font-sans uppercase"
                       onClick={() => setShowProfile(false)}
                     >
-                      <PersonAdd className="mr-2 text-gray-500" />
+                      <PersonAdd className="text-gray-500" />
                       Sign Up
                     </Link>
                   </li>
+
                 </>
               )}
             </ul>
           </div>
         )}
       </div>
-
-      {/* Wishlist */}
-      <Link
-        to="/wishlist"
-        className="relative text-gray-700 hover:text-blue-600 transition-colors"
-        aria-label="Wishlist"
-      >
-        <Favorite />
-        {wishlistItems.length > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {wishlistItems.length}
-          </span>
-        )}
-      </Link>
-
-      {/* Cart */}
       <Link
         to="/cart"
-        className="relative text-gray-700 hover:text-blue-600 transition-colors"
+        className="relative text-gray-700 hover:text-gray-600 transition-colors"
         aria-label="Cart"
       >
         <ShoppingBag />
         {cartItems.length > 0 && (
-          <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="absolute -top-2 -right-2 bg-gray-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {cartItems.length}
           </span>
         )}
@@ -338,7 +337,6 @@ const Header = () => {
   const { user } = useSelector((s) => s.user);
   const { companys } = useSelector((s) => s.company);
   const { categories } = useSelector((s) => s.categories);
-  const { banners } = useSelector((s) => s.bannerEvent);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -349,7 +347,6 @@ const Header = () => {
 
   useEffect(() => {
     dispatch(fetchCompanyInfo());
-    dispatch(fetchWishlistItems(user?._id));
     dispatch(fetchCartItems(user?._id));
     dispatch(fetchCategories());
     dispatch(fetchBanners());
@@ -380,11 +377,11 @@ const Header = () => {
           {!isMobile && (
             <button
               onClick={() => setCategoryDrawerOpen(true)}
-              className="flex items-center text-gray-700 hover:text-blue-600 transition-colors"
+              className="flex items-center text-gray-700 hover:text-gray-600 transition-colors"
               aria-label="Open categories"
             >
               <MenuIcon className="mr-1" />
-              <span className="font-medium">Categories</span>
+              <span className="tracking-[3px] font-sans uppercase">Categories</span>
             </button>
           )}
 
@@ -427,17 +424,17 @@ const Header = () => {
         }}
       >
         <div className="h-full flex flex-col bg-white">
-          <div className="flex justify-end p-3 bg-gray-900">
+          <div className="flex justify-end p-3 bg-gray-900 ">
             <IconButton
               onClick={() => setCategoryDrawerOpen(false)}
               aria-label="Close categories"
               className="text-white"
             >
-              <CloseIcon />
+              <CloseIcon className="text-white" />
             </IconButton>
           </div>
 
-          <List className="flex-grow overflow-y-auto">
+          <List className="flex-grow overflow-y-auto font-sans">
             {categories.map((cat, index) => (
               <Fragment key={cat._id}>
                 <ListItem
@@ -448,7 +445,14 @@ const Header = () => {
                   <ListItemText
                     primary={cat.name}
                     primaryTypographyProps={{
-                      className: "text-xl font-medium uppercase tracking-wide text-gray-900"
+                      sx: {
+                        fontSize: "17px",
+                        fontWeight: 500,
+                        textTransform: "Capitalize",
+                        letterSpacing: "4px",
+                        color: "#1F2937",
+                        fontFamily: "sans-serif",
+                      }
                     }}
                   />
                   {expandedCat === cat._id ? <ExpandLess /> : <ExpandMore />}
@@ -466,12 +470,20 @@ const Header = () => {
                         component={Link}
                         to={`/products?subcategory=${sub._id}`}
                         onClick={() => setCategoryDrawerOpen(false)}
-                        className="pl-12 py-3 hover:bg-gray-50"
+                        className="pl-12 py-3 hover:bg-gray-50 "
                       >
                         <ListItemText
                           primary={sub.name}
                           primaryTypographyProps={{
-                            className: "text-gray-700 uppercase text-sm"
+                            sx: {
+                              fontSize: "15px",
+                              paddingLeft: "16px",
+                              fontWeight: 400,
+                              textTransform: "capitalize",
+                              letterSpacing: "4px",
+                              fontFamily: "Inter, sans-serif",
+                              color: "#4B5563", 
+                            }
                           }}
                         />
                       </ListItem>
@@ -599,21 +611,7 @@ const Header = () => {
               </Fragment>
             ))}
 
-            {/* Events */}
-            <div className="px-6 py-4">
-              <div className="space-y-2">
-                {banners.map((evt) => (
-                  <Link
-                    key={evt._id}
-                    to="/event-campaign"
-                    onClick={() => setDrawerOpen(false)}
-                    className="text-red-600 hover:text-red-800 font-medium block transition-colors"
-                  >
-                    {evt.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
+
           </List>
         </div>
       </Drawer>

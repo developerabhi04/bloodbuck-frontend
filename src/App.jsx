@@ -12,6 +12,7 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import AdminRoute from "./auth/AdminRoute";
 import FirstBanners from "./Pages/Admin/Management/Banner/FirstBanners";
 import Loadertwo from "./components/Loader/Loadertwo";
+import ContactUs from "./Pages/FooterSections/ContactUS";
 
 // Lazy load pages
 const Home = lazy(() => import("./Pages/Home/Home"));
@@ -254,6 +255,15 @@ const App = () => {
             element={
               <MainLayout>
                 <PrivacyPolicy />
+              </MainLayout>
+            }
+          />
+
+           <Route
+            path="/contact-us"
+            element={
+              <MainLayout>
+                <ContactUs />
               </MainLayout>
             }
           />

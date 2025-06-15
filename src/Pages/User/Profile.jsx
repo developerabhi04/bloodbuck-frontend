@@ -13,7 +13,8 @@ import { Helmet } from "react-helmet-async";
 const Profile = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
-  const avatarUrl = user?.avatar?.url || "/default-avatar.png";
+  const avatarUrl = user?.avatar[0]?.url;
+  console.log(user);
 
   const [activeSection, setActiveSection] = useState("profile");
   const [updatedUser, setUpdatedUser] = useState({
@@ -63,10 +64,12 @@ const Profile = () => {
       </Helmet>
 
       <section className="min-h-screen bg-gray-100 py-32 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-3">
           {/* Sidebar */}
-          <aside className="bg-white shadow-xl rounded-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-indigo-600 to-blue-500 h-32 relative">
+          <aside className="md:col-span-4 bg-white shadow-xl rounded-lg overflow-hidden">
+
+            {/* <div className="bg-gradient-to-r from-indigo-600 to-blue-500 h-32 relative"> */}
+            <div className="bg-gray-900 h-32 relative">
               <img
                 src={avatarUrl}
                 alt="Avatar"
@@ -81,12 +84,12 @@ const Profile = () => {
 
               {/* Profile completeness */}
               <div className="mt-4">
-                <p className="text-sm text-gray-600 mb-1">
+                <p className="text-[12px] text-gray-600 mb-1">
                   Profile Completeness: {completeness}%
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-indigo-600 h-2"
+                    className="bg-gray-900 h-2"
                     style={{ width: `${completeness}%` }}
                   />
                 </div>
@@ -99,12 +102,12 @@ const Profile = () => {
                     key={id}
                     onClick={() => setActiveSection(id)}
                     className={`flex items-center space-x-3 px-4 py-2 rounded-lg cursor-pointer transition ${activeSection === id
-                        ? "bg-indigo-50 text-indigo-700 font-medium"
-                        : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-indigo-50 text-gray-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-100"
                       }`}
                   >
                     <Icon fontSize="small" />
-                    <span>{label}</span>
+                    <span className="text-[14px]">{label}</span>
                   </li>
                 ))}
               </ul>
@@ -113,7 +116,7 @@ const Profile = () => {
                 <div className="mt-6 border-t pt-4">
                   <button
                     onClick={goToAdmin}
-                    className="w-full flex items-center justify-center space-x-2 text-indigo-600 hover:text-indigo-800 transition font-medium"
+                    className="w-full flex items-center justify-center space-x-2 text-bg-gray-400 hover:text-gray-800 transition font-medium"
                   >
                     <AdminPanelSettings fontSize="small" />
                     <span>Admin Dashboard</span>
@@ -124,7 +127,7 @@ const Profile = () => {
           </aside>
 
           {/* Main Content */}
-          <div className="md:col-span-3 space-y-6">
+          <div className="md:col-span-8 space-y-6">
             <div className="bg-white shadow-xl rounded-lg p-8">
               {/* Tab Bar */}
               <div className="flex space-x-8 border-b border-gray-200">
@@ -133,23 +136,23 @@ const Profile = () => {
                     key={id}
                     onClick={() => setActiveSection(id)}
                     className={`pb-2 relative transition font-medium ${activeSection === id
-                        ? "text-indigo-600"
-                        : "text-gray-500 hover:text-gray-700"
+                      ? "text--gray-700"
+                      : "text-gray-500 hover:text-gray-700"
                       }`}
                   >
                     {label}
                     {activeSection === id && (
-                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600" />
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gray-900" />
                     )}
                   </button>
                 ))}
               </div>
 
               {/* Content */}
-              <div className="mt-6 transition-opacity duration-300 ease-in-out">
+              <div className="mt-6 transition-opacity duration-300 ease-in-out text-[13px]">
                 {activeSection === "profile" && (
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    <h3 className="text-xl font-semibold text-gray-800">
+                    <h3 className="text-[15px] font-semibold text-gray-800">
                       Personal Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -165,8 +168,8 @@ const Profile = () => {
                             onChange={handleChange}
                             disabled={field === "email"}
                             className={`px-4 py-2 border rounded-lg focus:ring-2 transition ${field === "email"
-                                ? "bg-gray-100 cursor-not-allowed border-gray-200"
-                                : "border-gray-300 focus:ring-indigo-400 focus:border-indigo-500"
+                              ? "bg-gray-100 cursor-not-allowed border-gray-200"
+                              : "border-gray-300 focus:ring-gray-400 focus:border-gray-500"
                               }`}
                           />
                         </div>
@@ -174,7 +177,7 @@ const Profile = () => {
                     </div>
                     <button
                       type="submit"
-                      className="mt-4 inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg transition"
+                      className="mt-4 inline-block bg-gray-900 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition"
                     >
                       Save Changes
                     </button>
@@ -182,8 +185,8 @@ const Profile = () => {
                 )}
 
                 {activeSection === "address" && (
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <h3 className="text-xl font-semibold text-gray-800">
+                  <form onSubmit={handleSubmit} className="space-y-6 text-[14px]">
+                    <h3 className="text-[14px] font-semibold text--800">
                       Address Details
                     </h3>
                     <div className="flex flex-col">
@@ -200,7 +203,7 @@ const Profile = () => {
                     </div>
                     <button
                       type="submit"
-                      className="mt-4 inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg transition"
+                      className="mt-4 inline-block bg-gray-700 hover:bg-gray-900 text-white font-medium px-6 py-2 rounded-lg transition"
                     >
                       Save Address
                     </button>
@@ -224,7 +227,7 @@ const Profile = () => {
                           <input
                             type="password"
                             name={name}
-                            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none transition"
+                            className="px-4 py-2 border rounded-lg focus:ring-2 focus:bg-gray-400 focus:outline-none transition"
                           />
                         </div>
                       ))}
@@ -235,13 +238,13 @@ const Profile = () => {
                         <input
                           type="password"
                           name="confirmPassword"
-                          className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none transition"
+                          className="px-4 py-2 border rounded-lg focus:ring-2 focus:bg-gray-400 focus:outline-none transition"
                         />
                       </div>
                     </div>
                     <button
                       type="submit"
-                      className="mt-4 inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg transition"
+                      className="mt-4 inline-block bg-gray-900 hover:bg-gray-700 text-white font-medium px-6 py-2 rounded-lg transition"
                     >
                       Change Password
                     </button>
@@ -267,7 +270,7 @@ const Profile = () => {
                     </div>
                     <button
                       type="submit"
-                      className="mt-4 inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg transition"
+                      className="mt-4 inline-block bg-gray-700 hover:bg-gray-900 text-white font-medium px-6 py-2 rounded-lg transition"
                     >
                       Send Reset Link
                     </button>

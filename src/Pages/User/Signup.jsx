@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { MdAccountCircle, MdEmail, MdLock } from 'react-icons/md';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import { motion } from 'framer-motion';
@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function SignUp() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const { loading, error, user } = useSelector(s => s.user);
 
     const [avatar, setAvatar] = useState(null);
@@ -53,9 +54,12 @@ export default function SignUp() {
         if (error) toast.error(error);
         if (user) {
             toast.success('Registration successful! Redirecting…');
-            setTimeout(() => navigate('/'), 1500);
+            setTimeout(() => {
+                const to = location.state?.redirectTo || '/';
+                navigate(to, { replace: true });
+            }, 1500);
         }
-    }, [error, user, navigate]);
+    }, [error, user, navigate, location.state]);
 
     return (
         <>
@@ -69,11 +73,20 @@ export default function SignUp() {
             </Helmet>
 
             <div className="min-h-screen flex">
+
                 {/* Illustration side */}
-                <div className="hidden lg:flex w-1/2 bg-green-600 items-center justify-center">
-                    <div className="text-center px-8">
+                <div className="hidden lg:flex w-1/2 bg-[#0f085a] relative">
+                    {/* 👇 Go Back Button Positioned Absolutely */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="absolute top-6 left-6 text-sm text-white hover:text-gray-300 transition flex items-center gap-1"
+                    >
+                        <span className="text-lg">←</span> Go Back
+                    </button>
+
+                    <div className="text-center px-8 m-auto">
                         <h1 className="text-4xl font-bold text-white mb-4">Join Us!</h1>
-                        <p className="text-green-200">
+                        <p className="text-gray-400">
                             Create an account to track orders, manage your profile, and enjoy exclusive deals.
                         </p>
                     </div>
@@ -99,7 +112,7 @@ export default function SignUp() {
                                     <img
                                         src={URL.createObjectURL(avatar)}
                                         alt="avatar"
-                                        className="h-24 w-24 rounded-full object-cover border-2 border-green-500"
+                                        className="h-24 w-24 rounded-full object-cover border-2 border-indigo-900"
                                     />
                                 ) : (
                                     <MdAccountCircle className="h-24 w-24 text-gray-400" />
@@ -151,7 +164,7 @@ export default function SignUp() {
                                     placeholder="Password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300"
                                     required
                                 />
                             </div>
@@ -176,7 +189,7 @@ export default function SignUp() {
                                 disabled={loading}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full flex items-center justify-center py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg disabled:opacity-50"
+                                className="w-full flex items-center justify-center py-2 px-4 bg-[#040c5a] hover:bg-[#040c5a] text-white font-semibold rounded-lg disabled:opacity-50"
                             >
                                 {loading ? (
                                     <svg
@@ -228,7 +241,7 @@ export default function SignUp() {
                             Already have an account?{' '}
                             <Link
                                 to="/sign-in"
-                                className="font-medium text-green-600 hover:text-green-500"
+                                className="font-medium text-gray-900 hover:text-gray-600"
                             >
                                 Sign in
                             </Link>

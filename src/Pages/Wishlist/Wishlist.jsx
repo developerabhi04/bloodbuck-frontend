@@ -1,3 +1,4 @@
+// src/pages/Wishlist.jsx
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -7,16 +8,13 @@ import {
 } from "../../redux/slices/wishlistSlices";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { Grid, Skeleton, Stack } from "@mui/material";
 import { Helmet } from "react-helmet-async";
 
 const Wishlist = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.user);
-  const { wishlistItems, isLoading } = useSelector(
-    (state) => state.wishlist
-  );
+  const { wishlistItems, isLoading } = useSelector((state) => state.wishlist);
 
   useEffect(() => {
     if (user) {
@@ -32,16 +30,9 @@ const Wishlist = () => {
   ) => {
     try {
       await dispatch(
-        removeFromWishlist({
-          userId: user._id,
-          productId,
-          sizes,
-          seamSizes,
-          colorName,
-        })
+        removeFromWishlist({ userId: user._id, productId, sizes, seamSizes, colorName })
       ).unwrap();
       toast.success("Item removed from wishlist!");
-      // dispatch(fetchWishlistItems(user._id));
     } catch (error) {
       toast.error(error?.message || "Failed to remove item from wishlist");
     }
@@ -53,143 +44,103 @@ const Wishlist = () => {
       return;
     }
 
-    const payload = {
-      userId: user._id,
-      productId: item.productId,
-      sizes: item.selectedSize || null,
-      seamSizes: item.selectedSeamSize || null,
-      colorName: item.selectedColorName,
-    };
     try {
-      await dispatch(moveToCart(payload)).unwrap();
+      await dispatch(
+        moveToCart({
+          userId: user._id,
+          productId: item.productId,
+          sizes: item.selectedSize || null,
+          seamSizes: item.selectedSeamSize || null,
+          colorName: item.selectedColorName,
+        })
+      ).unwrap();
 
       toast.success("Item moved to cart successfully!");
     } catch (error) {
-      console.error("❌ Move to Cart Error:", error);
       toast.error(error?.message || "Failed to move item to cart.");
     }
   };
 
-  if (isLoading)
-    return (
-      <>
-        <Grid item md={5} sm={8} xs={12} lg={12} height={"100%"}>
-          <Stack spacing={"1rem"}>
-            {Array.from({ length: 18 }).map((_, index) => (
-              <Skeleton key={index} variant="rounded" height={"2rem"} />
-            ))}
-          </Stack>
-        </Grid>
-      </>
-    );
- 
-
   const navigateLink = (id) => {
-    window.scrollTo(0, 0); // Scrolls to the top of the page
+    window.scrollTo(0, 0);
     navigate(`/product-details/${id}`);
   };
 
   return (
     <>
       <Helmet>
-        <title>My Wishlist | YourSiteName</title>
+        <title>My Wishlist | Bloodbuck</title>
         <meta
           name="description"
-          content="View and manage your wishlist items on YourSiteName. Move items to cart or remove them at any time."
+          content="View and manage your wishlist items. Move items to cart or remove them at any time."
         />
-        <link rel="canonical" href="https://www.yoursite.com/wishlist" />
-        <meta property="og:title" content="My Wishlist – YourSiteName" />
-        <meta
-          property="og:description"
-          content="Your saved items are here. Shop smarter by moving favorites to your cart."
-        />
-        <meta property="og:url" content="https://www.yoursite.com/wishlist" />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [
-              {
-                "@type": "ListItem",
-                position: 1,
-                name: "Home",
-                item: "https://www.yoursite.com"
-              },
-              {
-                "@type": "ListItem",
-                position: 2,
-                name: "Wishlist",
-                item: "https://www.yoursite.com/wishlist"
-              }
-            ]
-          })}
-        </script>
-        {wishlistItems.length > 0 && (
-          <script type="application/ld+json">
-            {JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "ItemList",
-              itemListElement: wishlistItems.map((item, idx) => ({
-                "@type": "ListItem",
-                position: idx + 1,
-                url: `https://www.yoursite.com/product-details/${item.productId}`
-              }))
-            })}
-          </script>
-        )}
       </Helmet>
 
-    <section className="wishlist-page">
-      <div className="container">
-        <h1 className="page-heading">My Wishlist</h1>
-
-        {wishlistItems.length === 0 ? (
-          <div className="empty-wishlist">
-            <p>Your wishlist is empty. Start adding your favorite products!</p>
-            <button className="shop-now" onClick={() => navigate("/products")}>
-              Shop Now
-            </button>
+      <section className="min-h-screen bg-gradient-to-r from-gray-50 via-white to-gray-100 py-36 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">Wishlist</h1>
+            {wishlistItems.length > 0 && (
+              <span className="text-sm sm:text-base text-gray-600 text-center sm:text-right">
+                You have {wishlistItems.length} item(s) saved
+              </span>
+            )}
           </div>
-        ) : (
-          <div className="wishlist-grid">
-            {wishlistItems.map((item) => (
-              <div
-                className="wishlist-card"
-                key={`${item.productId}-${item.selectedSize || "noSize"}-${
-                  item.selectedSeamSize || "noSeamSize"
-                }-${item.selectedColorName}`}
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, idx) => (
+                <div key={idx} className="animate-pulse bg-white rounded-3xl p-6 shadow-md h-56" />
+              ))}
+            </div>
+          ) : wishlistItems.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-xl text-gray-600 mb-4">Your wishlist is empty.</p>
+              <button
+                onClick={() => navigate("/products")}
+                className="px-6 py-3 bg-black text-white text-lg font-medium rounded-full hover:bg-gray-800 shadow-lg"
               >
+                Browse Products
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {wishlistItems.map((item) => (
                 <div
-                  className="wishlist-image"
-                  onClick={() => navigateLink(item.productId)}
+                  key={`${item.productId}-${item.selectedSize}-${item.selectedSeamSize}-${item.selectedColorName}`}
+                  className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all p-6 flex flex-col relative overflow-hidden border border-gray-200"
                 >
-                  <img src={item.imageUrl} alt={item.name} />
-                </div>
-                <div className="wishlist-details">
-                  <h3>{item.name}</h3>
+                  <div
+                    className="relative w-full rounded-2xl overflow-hidden cursor-pointer"
+                    onClick={() => navigateLink(item.productId)}
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-md">
+                      ${item.price}.00
+                    </div>
+                  </div>
 
-                  {item.selectedSize && (
-                    <p className="item-variant">
-                      Size (Top): {item.selectedSize}
-                    </p>
-                  )}
-                  {item.selectedSeamSize && (
-                    <p className="item-variant">
-                      Seam Size (Bottom): {item.selectedSeamSize}
-                    </p>
-                  )}
-                  <p className="price">${item.price}.00</p>
+                  <div className="flex-1 mt-4 space-y-2">
+                    <h3 className="text-xl font-semibold text-gray-900 truncate">{item.name}</h3>
+                    <div className="text-sm text-gray-500 space-y-1">
+                      {item.selectedSize && <p>Top Size: {item.selectedSize}</p>}
+                      {item.selectedSeamSize && <p>Bottom Size: {item.selectedSeamSize}</p>}
+                      {item.selectedColorName && <p>Color: {item.selectedColorName}</p>}
+                    </div>
+                  </div>
 
-                  <div className="wishlist-actions">
+                  <div className="mt-5 flex flex-col gap-2">
                     <button
-                      className="move-to-cart"
                       onClick={() => handleMoveToCart(item)}
+                      className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full font-semibold transition-all shadow-md"
                     >
                       Move to Cart
                     </button>
-
                     <button
-                      className="remove-item"
                       onClick={() =>
                         handleRemoveFromWishlist(
                           item.productId,
@@ -198,17 +149,17 @@ const Wishlist = () => {
                           item.selectedColorName
                         )
                       }
+                      className="w-full py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-full font-semibold transition-all shadow-md"
                     >
-                      Remove
+                      Remove Item
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </>
   );
 };

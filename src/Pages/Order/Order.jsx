@@ -81,7 +81,7 @@ const Order = () => {
         </script>
       </Helmet>
 
-      <section className="min-h-screen bg-gray-50 py-12 px-4">
+      <section className="min-h-screen bg-gray-50 py-32 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
           <header className="text-center">
             <h1 className="text-4xl font-bold text-gray-800">
@@ -125,12 +125,12 @@ const Order = () => {
                       <div className="flex items-center space-x-4">
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-medium ${order.status === "Delivered"
-                              ? "bg-green-100 text-green-800"
-                              : order.status === "Shipped"
-                                ? "bg-blue-100 text-blue-800"
-                                : order.status === "Processing"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-gray-100 text-gray-800"
+                            ? "bg-green-100 text-green-800"
+                            : order.status === "Shipped"
+                              ? "bg-blue-100 text-blue-800"
+                              : order.status === "Processing"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
                             }`}
                         >
                           {order.status}
@@ -178,7 +178,7 @@ const Order = () => {
                                   {item.name}
                                 </h3>
                                 <p className="text-gray-500 text-sm">
-                                  Size: {item.selectedSize || "N/A"} | Qty:{" "}
+                                  Qty:{" "}
                                   {item.quantity}
                                 </p>
                               </div>

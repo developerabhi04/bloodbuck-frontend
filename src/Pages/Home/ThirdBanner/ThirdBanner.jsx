@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchThirdBanners } from "../../../redux/slices/thirdBannerSlices";
 import { useNavigate } from "react-router-dom";
@@ -42,7 +42,7 @@ const ThirdBanner = () => {
                                 )}
                                 <button
                                     onClick={handleNavigate}
-                                    className="mt-6 bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition"
+                                    className="mt-6 tracking-[4px] font-sans uppercase bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition"
                                 >
                                     Explore Collection
                                 </button>
@@ -63,7 +63,7 @@ const ThirdBanner = () => {
                                 </h3>
                                 <button
                                     onClick={handleNavigate}
-                                    className="mt-2 bg-white text-black px-4 py-1 rounded-full font-medium hover:bg-gray-200 transition"
+                                    className="mt-2 bg-white text-black px-4 py-1 tracking-[4px] font-sans uppercase rounded-full font-medium hover:bg-gray-200 transition"
                                 >
                                     Shop Now
                                 </button>
@@ -84,7 +84,7 @@ const ThirdBanner = () => {
                                 </h3>
                                 <button
                                     onClick={handleNavigate}
-                                    className="mt-2 bg-white text-black px-4 py-1 rounded-full font-medium hover:bg-gray-200 transition"
+                                    className="mt-2 bg-white text-black px-4 tracking-[4px] font-sans uppercase py-1 rounded-full font-medium hover:bg-gray-200 transition"
                                 >
                                     Shop Now
                                 </button>

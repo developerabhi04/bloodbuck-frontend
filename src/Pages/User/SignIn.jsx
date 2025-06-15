@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import { motion } from 'framer-motion';
@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 export default function SignIn() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const { loading, error, user } = useSelector(s => s.user);
 
     const [formData, setFormData] = useState({ email: '', password: '' });
@@ -51,8 +52,12 @@ export default function SignIn() {
     // Redirect on success / show error
     useEffect(() => {
         if (error) toast.error(error);
-        if (user) navigate('/', { replace: true });
-    }, [error, user, navigate]);
+        if (user) {
+            // honor any redirectTo passed in state, else go home
+            const to = location.state?.redirectTo || '/';
+            navigate(to, { replace: true });
+        }
+    }, [error, user, navigate, location.state]);
 
     const pageTitle = 'Sign In | Your Store';
     const pageDescription =
@@ -81,10 +86,18 @@ export default function SignIn() {
 
             <div className="min-h-screen flex">
                 {/* Left graphic */}
-                <div className="hidden lg:flex w-1/2 bg-indigo-700 items-center justify-center">
-                    <div className="text-center px-8">
+                <div className="hidden lg:flex w-1/2 bg-[#06032B] relative">
+                    {/* 👇 Go Back Button Positioned Absolutely */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="absolute top-6 left-6 text-sm text-white hover:text-gray-300 transition flex items-center gap-1"
+                    >
+                        <span className="text-lg">←</span> Go Back
+                    </button>
+
+                    <div className="text-center px-8 m-auto">
                         <h1 className="text-4xl font-bold text-white mb-4">Welcome Back!</h1>
-                        <p className="text-indigo-200">
+                        <p className="text-gray-400">
                             Sign in to manage your account, view orders, and explore new products.
                         </p>
                     </div>
@@ -93,13 +106,17 @@ export default function SignIn() {
                 {/* Form */}
                 <div className="flex flex-col w-full lg:w-1/2 justify-center items-center bg-gray-50 p-6">
                     <ToastContainer position="top-right" />
+
+
+
+
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
                         className="w-full max-w-md bg-white p-8 rounded-xl shadow-xl"
                     >
-                        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+                        <h2 className="text-2xl font-semibold text-[#06032B] mb-6 text-center">
                             Sign In
                         </h2>
 
@@ -115,8 +132,8 @@ export default function SignIn() {
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.email && !formData.email
-                                            ? 'border-red-500 focus:ring-red-300'
-                                            : 'border-gray-300 focus:ring-indigo-300'
+                                        ? 'border-red-500 focus:ring-red-300'
+                                        : 'border-gray-300 focus:ring-indigo-300'
                                         }`}
                                     required
                                 />
@@ -136,8 +153,8 @@ export default function SignIn() {
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.password && !formData.password
-                                            ? 'border-red-500 focus:ring-red-300'
-                                            : 'border-gray-300 focus:ring-indigo-300'
+                                        ? 'border-red-500 focus:ring-red-300'
+                                        : 'border-gray-300 focus:ring-indigo-300'
                                         }`}
                                     required
                                 />
@@ -162,7 +179,7 @@ export default function SignIn() {
                                 <label className="inline-flex items-center">
                                     <input
                                         type="checkbox"
-                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-300 rounded"
                                     />
                                     <span className="ml-2 text-sm text-gray-600">Remember me</span>
                                 </label>
@@ -179,7 +196,7 @@ export default function SignIn() {
                                 disabled={loading}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full flex items-center justify-center py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg disabled:opacity-50"
+                                className="w-full flex items-center justify-center py-2 px-4 bg-[#06032B] hover:bg-gray-700 text-white font-semibold rounded-lg disabled:opacity-50"
                             >
                                 {loading ? (
                                     <svg
@@ -225,7 +242,7 @@ export default function SignIn() {
                                 <FcGoogle size={28} />
                             </button>
                             {/* Placeholder icons for future providers */}
-                           
+
                         </div>
 
                         <p className="mt-8 text-center text-sm text-gray-600">

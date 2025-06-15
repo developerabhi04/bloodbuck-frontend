@@ -170,7 +170,8 @@ const NewArrivalProduct = () => {
   return (
     <section className="bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-16 uppercase tracking-wider">
+        {/* <h1 className="text-3xl md:text-4xl text-center mb-16 uppercase tracking-wider font-sans"> */}
+        <h1 className="text-4xl md:text-3xl text-center sm:text-2xl font-normal text-gray-900 uppercase tracking-[5px] font-sans mb-12">
           What’s new this week.
         </h1>
 
@@ -256,7 +257,7 @@ const NewArrivalProduct = () => {
 
         <div className="flex justify-center mt-10">
           <button
-            className="px-8 py-3 border-2 border-black bg-white text-black font-bold tracking-wider rounded-lg transition-all duration-300 hover:bg-black hover:text-white"
+            className="px-8 py-3 border-2 border-gray-400 tracking-[3px] bg-white text-black  rounded-lg transition-all font-sans space-x-4 duration-300 hover:bg-gray-800  hover:text-white"
             onClick={() => navigate("/products")}
           >
             SHOP {"WHAT'S"} NEW

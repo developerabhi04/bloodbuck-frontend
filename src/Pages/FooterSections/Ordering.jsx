@@ -1,6 +1,6 @@
 import { useState } from 'react';// Import Icons
 import { Helmet } from 'react-helmet-async';
-import { FaChevronDown, FaFontAwesome } from 'react-icons/fa';
+import PageLayout from '../../Components/Layout/PageLayout';
 
 const Ordering = () => {
     const [activeCategory, setActiveCategory] = useState('general');
@@ -9,146 +9,72 @@ const Ordering = () => {
 
     const faqData = {
         general: [
-            {
-                question: 'What payment methods do you accept?',
-                answer: 'We accept Visa, MasterCard, American Express, Discover, and PayPal.',
-            },
-            {
-                question: 'How secure is my online order?',
-                answer: 'Your online order is highly secure. We use SSL encryption to protect your personal information during transmission.',
-            },
+            { question: 'What payment methods do you accept?', answer: 'We accept Visa, MasterCard, Amex, and PayPal.' },
+            { question: 'Is my order secure?', answer: 'All orders are encrypted with SSL for secure transactions.' }
         ],
         shipping: [
-            {
-                question: 'What are the shipping options and delivery times?',
-                answer: 'We offer standard, expedited, and express shipping. Delivery times vary based on the option you choose.',
-            },
-            {
-                question: 'How do I track my order after it is shipped?',
-                answer: 'Once your order ships, we will send you a tracking number via email, allowing you to monitor its progress.',
-            },
+            { question: 'What are your shipping options?', answer: 'Standard, Express, and Overnight options are available.' },
+            { question: 'Can I track my shipment?', answer: 'Yes, tracking information will be sent to your email.' }
         ],
         returns: [
-            {
-                question: 'What is your return policy for orders?',
-                answer: 'We accept returns within 30 days of purchase, provided the items are unused and in their original packaging.',
-            },
-            {
-                question: 'How do I initiate a return for an order?',
-                answer: 'To initiate a return, please contact our customer support team. We will provide you with a return authorization number and instructions.',
-            },
+            { question: 'What is your return policy?', answer: 'Items can be returned within 30 days in original condition.' },
+            { question: 'How do I initiate a return?', answer: 'Contact our support to receive return instructions.' }
         ],
         billing: [
-            {
-                question: 'How can I update my billing information for future orders?',
-                answer: 'You can update your billing information in the "My Account" section of our website.',
-            },
-            {
-                question: 'What should I do if I see an error on my billing statement?',
-                answer: 'If you notice an error on your billing statement, please contact our support team immediately, and we will investigate the issue.',
-            },
-        ],
+            { question: 'How do I update my billing info?', answer: 'You can update it in your account settings.' },
+            { question: 'Why was my payment declined?', answer: 'Please check with your bank or try another payment method.' }
+        ]
     };
 
     const filteredQuestions = faqData[activeCategory].filter((faq) =>
         faq.question.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleCategoryChange = (category) => {
-        setActiveCategory(category);
-        setSearchTerm('');
-        setExpandedQuestion(null);
-    };
-
-    const toggleQuestion = (index) => {
-        setExpandedQuestion(expandedQuestion === index ? null : index);
-    };
-
-    // Build FAQPage structured data
-    const faqStructuredData = {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: Object.values(faqData)
-            .flat()
-            .map(({ question, answer }) => ({
-                "@type": "Question",
-                name: question,
-                acceptedAnswer: {
-                    "@type": "Answer",
-                    text: answer,
-                },
-            })),
-    };
-
-
     return (
         <>
             <Helmet>
-                <title>Ordering FAQs | Fem Cartel</title>
-                <meta
-                    name="description"
-                    content="Find answers to common questions about ordering, payment, shipping, returns, and billing at Fem Cartel."
-                />
-                <link
-                    rel="canonical"
-                    href="https://www.femcartel.com/faq/ordering"
-                />
-                <meta
-                    property="og:title"
-                    content="Ordering FAQs – Fem Cartel"
-                />
-                <meta
-                    property="og:description"
-                    content="Everything you need to know about ordering, payment options, shipping, and returns."
-                />
-                <meta
-                    property="og:url"
-                    content="https://www.femcartel.com/faq/ordering"
-                />
-                <script type="application/ld+json">
-                    {JSON.stringify(faqStructuredData)}
-                </script>
+                <title>Ordering Help | Bloodbuck</title>
+                <meta name="description" content="Help and support for ordering, shipping, billing, and returns at Bloodbuck." />
             </Helmet>
-            <div className="ordering-faq-section">
-                <h1 className="ordering-faq-title">Ordering FAQs</h1>
-
-                {/* Categories */}
-                <div className="ordering-faq-categories">
-                    {Object.keys(faqData).map((category) => (
-                        <button
-                            key={category}
-                            className={`category-btn ${activeCategory === category ? 'active' : ''}`}
-                            onClick={() => handleCategoryChange(category)}
-                        >
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </button>
-                    ))}
-                </div>
-
-                {/* FAQ Items */}
-                <div className="ordering-faq-items">
-                    {filteredQuestions.length > 0 ? (
-                        filteredQuestions.map((faq, index) => (
-                            <div key={index} className="ordering-faq-item">
-                                <h2
-                                    className={`ordering-faq-question ${expandedQuestion === index ? 'expanded' : ''}`}
-                                    onClick={() => toggleQuestion(index)}
-                                >
+            <PageLayout title="Ordering Help">
+                {/* <input
+          type="text"
+          placeholder="Search ordering topics..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full border p-2 rounded mb-4"
+        /> */}
+                <div className="flex flex-col sm:flex-row gap-6">
+                    <div className="sm:w-1/4 space-y-2">
+                        {Object.keys(faqData).map((cat) => (
+                            <button
+                                key={cat}
+                                className={`w-full text-left px-4 py-2 border rounded ${activeCategory === cat ? 'bg-black text-white' : 'bg-white'}`}
+                                onClick={() => {
+                                    setActiveCategory(cat);
+                                    setExpandedQuestion(null);
+                                }}
+                            >
+                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="sm:w-3/4 space-y-4">
+                        {filteredQuestions.map((faq, i) => (
+                            <div key={i} className="border rounded p-4">
+                                <h3 onClick={() => setExpandedQuestion(expandedQuestion === i ? null : i)} className="font-medium cursor-pointer text-lg flex justify-between">
                                     {faq.question}
-                                    <FaFontAwesome icon={FaChevronDown} className="arrow-icon" />
-                                </h2>
-                                {expandedQuestion === index && (
-                                    <p className="ordering-faq-answer">{faq.answer}</p>
-                                )}
+                                    <span>{expandedQuestion === i ? '-' : '+'}</span>
+                                </h3>
+                                {expandedQuestion === i && <p className="mt-2 text-gray-600">{faq.answer}</p>}
                             </div>
-                        ))
-                    ) : (
-                        <p className="no-results">No questions found for your search.</p>
-                    )}
+                        ))}
+                    </div>
                 </div>
-            </div>
+            </PageLayout>
         </>
     );
 };
 
 export default Ordering;
+
