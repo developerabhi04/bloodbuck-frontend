@@ -24,6 +24,7 @@ const Products = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { products, loading: prodLoading } = useSelector((state) => state.products);
+  
   const { categories, loading: catLoading } = useSelector((state) => state.categories);
 
   const { colorOptions } = useMemo(() => {
