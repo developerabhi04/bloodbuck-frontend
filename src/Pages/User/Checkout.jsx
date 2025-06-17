@@ -4,18 +4,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import emailjs, { init } from "@emailjs/browser";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
 import { Helmet } from "react-helmet-async";
 
 import { validateCoupon } from "../../redux/slices/couponSlices";
-import { createNewOrder } from "../../redux/slices/orderSlices";
+import { confirmRazorpayPayment, createNewOrder } from "../../redux/slices/orderSlices";
 import { clearOrderedProducts } from "../../redux/slices/cartSlices";
-import { server } from "../../server";
+
 
 // Init EmailJS
 init("OxJ-ujUPZE2bAuJdk");
 
 export default function Checkout() {
+
   const { state } = useLocation();
   const cartItems = state?.cartItems || [];
   const dispatch = useDispatch();
@@ -23,58 +23,38 @@ export default function Checkout() {
   const { user } = useSelector((s) => s.user);
   const { loading: couponLoading } = useSelector((s) => s.coupons);
 
-  // Accordion state
   const [activeSection, setActiveSection] = useState("shipping");
-  const toggleSection = (sec) =>
-    setActiveSection((prev) => (prev === sec ? null : sec));
+  const toggleSection = (sec) => setActiveSection((prev) => (prev === sec ? null : sec));
 
-  // Shipping form state
   const [shippingDetails, setShippingDetails] = useState({
-    fullName: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    phoneNumber: "",
-    email: "",
+    fullName: "", address: "", city: "", state: "",
+    zipCode: "", phoneNumber: "", email: "",
   });
   const [errors, setErrors] = useState({});
-
-  // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
-
-  // Payment method state
   const [paymentMethod, setPaymentMethod] = useState("CashOnDelivery");
 
-  // Cost calculations
   const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const tax = +(subtotal * 0.07).toFixed(2);
   const shippingCost = 0;
   const totalBeforeDiscount = +(subtotal + tax + shippingCost).toFixed(2);
   const discountedTotal = +(totalBeforeDiscount - discountAmount).toFixed(2);
 
-  // Live validation
   const handleChange = (e) => {
     const { id, value } = e.target;
     setShippingDetails((p) => ({ ...p, [id]: value }));
     let msg = "";
     if (id === "fullName" && value.trim().length < 3) msg = "Min 3 chars";
-    if (id === "zipCode" && !/^\d{5}(-\d{4})?$/.test(value)) msg = "Invalid ZIP";
+    if (id === "zipCode" && !/^[0-9]{6}$/.test(value)) msg = "Invalid ZIP";
     if (id === "phoneNumber" && !/^\d{10}$/.test(value)) msg = "Must be 10 digits";
     if (id === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) msg = "Invalid email";
     setErrors((p) => ({ ...p, [id]: msg }));
   };
 
-  // Apply coupon
   const handleApplyCoupon = async () => {
     try {
-      const res = await dispatch(
-        validateCoupon({
-          code: couponCode.trim(),
-          totalAmount: totalBeforeDiscount,
-        })
-      ).unwrap();
+      const res = await dispatch(validateCoupon({ code: couponCode.trim(), totalAmount: totalBeforeDiscount })).unwrap();
       setDiscountAmount(res.discountAmount);
       toast.success(res.message);
     } catch (err) {
@@ -82,140 +62,99 @@ export default function Checkout() {
     }
   };
 
-  // Dynamically load Razorpay SDK
-  const loadRazorpay = () =>
-    new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
+  const loadRazorpay = () => new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 
-  // Place order (COD and email)
-  const handleOrderCreation = async (paymentResult = {}) => {
-    // Ensure shipping fields
-    for (let field of Object.keys(shippingDetails)) {
-      if (!shippingDetails[field].trim()) {
-        toast.error("Please fill all shipping fields");
-        return;
-      }
-    }
-
+  const handleOrderCreation = async () => {
     const orderData = {
-      user: user._id,
-      cartItems,
-      shippingDetails,
-      subtotal,
-      tax,
-      shippingCost,
-      total: discountedTotal || totalBeforeDiscount,
-      discountAmount,
-      paymentMethod,
-      paymentResult,
+      user: user._id, cartItems, shippingDetails, subtotal, tax,
+      shippingCost, total: discountedTotal || totalBeforeDiscount,
+      discountAmount, paymentMethod,
     };
-
-    try {
-      // Create order
-      const order = await dispatch(createNewOrder(orderData)).unwrap();
-
-      // Send confirmation email
-      const templateParams = {
-        order_id: order._id,
-        orders: cartItems.map((i) => ({
-          image_url: i.imageUrl,
-          name: i.name,
-          units: i.quantity,
-          price: i.price.toFixed(2),
-        })),
-        cost: {
-          shipping: shippingCost.toFixed(2),
-          tax: tax.toFixed(2),
-          total: (discountedTotal || totalBeforeDiscount).toFixed(2),
-        },
-        email: shippingDetails.email,
-      };
-      await emailjs.send(
-        "service_jbo1u2h",
-        "template_qnsdz0r",
-        templateParams
-      );
-
-      // Clear cart
-      await dispatch(
-        clearOrderedProducts({
-          userId: user._id,
-          orderedItems: cartItems.map((i) => i.productId),
-        })
-      ).unwrap();
-      toast.success("Order placed!");
-
-      // Redirect to success page
-      setTimeout(() => {
-        navigate("/orders-success", { state: { orderId: order._id } });
-      }, 800);
-    } catch (err) {
-      toast.error(err.message || "Order failed");
-    }
+    const response = await dispatch(createNewOrder(orderData)).unwrap();
+    return response;
   };
 
-  // Razorpay payment flow
+  const finalizeOrder = async (orderId) => {
+    await emailjs.send("service_jbo1u2h", "template_qnsdz0r", {
+      order_id: orderId,
+      orders: cartItems.map((i) => ({
+        image_url: i.imageUrl,
+        name: i.name,
+        units: i.quantity,
+        price: i.price.toFixed(2),
+      })),
+      cost: {
+        shipping: shippingCost.toFixed(2),
+        tax: tax.toFixed(2),
+        total: (discountedTotal || totalBeforeDiscount).toFixed(2),
+      },
+      email: shippingDetails.email,
+    });
+
+    await dispatch(clearOrderedProducts({
+      userId: user._id,
+      orderedItems: cartItems.map((i) => i.productId),
+    })).unwrap();
+
+    toast.success("Order placed!");
+    setTimeout(() => {
+      navigate("/orders-success", { state: { orderId } });
+    }, 800);
+  };
+
   const handleRazorpayPayment = async () => {
     try {
-      // 1) Create Razorpay order on server
-      const response = await axios.post(
-        `${server}/order/new-order`,
-        {
-          user: user._id,
-          cartItems,
-          shippingDetails,
-          subtotal,
-          tax,
-          shippingCost,
-          total: discountedTotal || totalBeforeDiscount,
-          discountAmount,
-          paymentMethod: "Razorpay",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      const { razorpayOrder } = response.data;
+      const orderData = {
+        user: user._id, cartItems, shippingDetails, subtotal, tax,
+        shippingCost, total: discountedTotal || totalBeforeDiscount,
+        discountAmount, paymentMethod: "Razorpay"
+      };
+      const { order, razorpayOrder } = await dispatch(createNewOrder(orderData)).unwrap();
 
-      // 2) Load SDK
       const sdkReady = await loadRazorpay();
-      if (!sdkReady) {
-        toast.error("Razorpay SDK failed to load");
-        return;
-      }
+      if (!sdkReady) return toast.error("Razorpay SDK failed to load");
 
-      // 3) Open checkout
       const options = {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         order_id: razorpayOrder.id,
-        handler: (resp) => {
-          handleOrderCreation({
-            razorpayPaymentId: resp.razorpay_payment_id,
-            razorpayOrderId: resp.razorpay_order_id,
-            razorpaySignature: resp.razorpay_signature,
-          });
+        handler: async (resp) => {
+          await dispatch(confirmRazorpayPayment({
+            orderId: order._id,
+            razorpay_order_id: resp.razorpay_order_id,
+            razorpay_payment_id: resp.razorpay_payment_id,
+            razorpay_signature: resp.razorpay_signature,
+          })).unwrap();
+          finalizeOrder(order._id);
         },
         prefill: {
           name: shippingDetails.fullName,
           email: shippingDetails.email,
         },
       };
+
       new window.Razorpay(options).open();
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Razorpay order creation failed"
-      );
+      toast.error(err.message || "Payment failed");
     }
   };
+
+  const handleCOD = async () => {
+    try {
+      const { order } = await handleOrderCreation();
+      await finalizeOrder(order._id);
+    } catch (err) {
+      toast.error(err.message || "COD order failed");
+    }
+  };
+
 
   // FAQ data
   const faqData = [
@@ -243,7 +182,7 @@ export default function Checkout() {
                 className="w-full px-6 py-4 flex justify-between items-center text-lg font-medium"
               >
                 <span>Shipping Details</span>
-                {activeSection === "shipping" ? <ArrowDropUp /> : <ArrowDropDown />} 
+                {activeSection === "shipping" ? <ArrowDropUp /> : <ArrowDropDown />}
               </button>
               {activeSection === "shipping" && (
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -280,7 +219,7 @@ export default function Checkout() {
                 className="w-full px-6 py-4 flex justify-between items-center text-lg font-medium"
               >
                 <span>Frequently Asked Questions</span>
-                {activeSection === "faq" ? <ArrowDropUp /> : <ArrowDropDown />} 
+                {activeSection === "faq" ? <ArrowDropUp /> : <ArrowDropDown />}
               </button>
               {activeSection === "faq" && (
                 <div className="p-6 space-y-4">
@@ -371,8 +310,8 @@ export default function Checkout() {
               {/* Action Button */}
               {paymentMethod === "CashOnDelivery" ? (
                 <button
-                  onClick={() => handleOrderCreation()}
-                  className="w-full bg-green-600 text-white py-3 rounded"
+                  onClick={handleCOD}
+                  className="w-full bg-gray-600 text-white py-3 rounded"
                 >
                   Place Order (COD)
                 </button>

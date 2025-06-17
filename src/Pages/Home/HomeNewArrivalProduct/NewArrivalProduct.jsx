@@ -222,12 +222,12 @@ const NewArrivalProduct = () => {
                           {product.colors.map((color, index) => {
                             const variantImg = getVariantImage(color);
                             return (
-                              <div key={index} className="px-1">
+                              <div key={index} className="px-1 pt-2">
                                 <div className="flex justify-center">
                                   <img
                                     src={color.colorImage?.url || variantImg}
                                     alt={color.colorName || `Color ${index + 1}`}
-                                    className="w-8 h-8 rounded-full border border-gray-200 cursor-pointer transition-transform duration-200 hover:scale-110 hover:border-gray-400"
+                                    className="w-6 h-6 rounded-full border border-gray-200 cursor-pointer transition-transform duration-200 hover:scale-110 hover:border-gray-400"
                                     onMouseEnter={() => handleColorHover(product._id, color)}
                                     onClick={() => navigateLink(product._id, variantImg)}
                                   />

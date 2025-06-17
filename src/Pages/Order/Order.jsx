@@ -155,7 +155,7 @@ const Order = () => {
 
                     {/* Expandable Details */}
                     <div
-                      className={`px-6 pb-6 overflow-hidden transition-max-height duration-300 ${isOpen ? "max-h-screen" : "max-h-0"
+                      className={`px-4 pb-4 overflow-hidden transition-max-height duration-300 ${isOpen ? "max-h-screen" : "max-h-0"
                         }`}
                     >
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -212,7 +212,7 @@ const Order = () => {
                             onClick={() =>
                               navigate(`/orders-details/${order._id}`)
                             }
-                            className="w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md transition"
+                            className="w-full text-center bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition"
                           >
                             View Full Details
                           </button>

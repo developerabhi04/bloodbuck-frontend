@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { server } from "../../server";
 
+
 //Create an Asynchronous Redux Thunk
 export const createNewOrder = createAsyncThunk(
     "order/createNewOrder",
@@ -18,6 +19,23 @@ export const createNewOrder = createAsyncThunk(
     }
 );
 
+export const confirmRazorpayPayment = createAsyncThunk(
+    "order/confirmRazorpayPayment",
+    async (paymentData, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.post(`${server}/payment/razorpay-confirm`, paymentData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to confirm Razorpay payment");
+        }
+    }
+);
 
 
 // ✅ Fetch all orders
@@ -107,12 +125,15 @@ const orderSlice = createSlice({
         orders: [],
         latestOrders: [],
         orderDetails: null,
+        newOrder: null,
         loading: false,
         error: null,
+        newOrderSuccess: false,
     },
     reducers: {
         resetNewOrderSuccess: (state) => {
             state.newOrderSuccess = false;
+            state.newOrder = null;
             state.orderPlaced = false;
         },
     },
@@ -130,6 +151,17 @@ const orderSlice = createSlice({
                 state.newOrder = action.payload;
             })
             .addCase(createNewOrder.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(confirmRazorpayPayment.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(confirmRazorpayPayment.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(confirmRazorpayPayment.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

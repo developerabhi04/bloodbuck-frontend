@@ -66,8 +66,8 @@ const OrderDetails = () => {
         <title>Order #{orderDetails._id.slice(-8).toUpperCase()} | Your Store</title>
       </Helmet>
 
-      <section className="min-h-screen bg-gray-50 py-32 px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-2">
+      <section className="min-h-screen bg-gray-50 py-32 px-4 ">
+        <div className="max-w-8xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-2">
           {/* Left Sidebar */}
           <aside className="space-y-6 lg:col-span-1">
             {/* Order Summary */}
@@ -77,8 +77,8 @@ const OrderDetails = () => {
               </h2>
               <div className="space-y-2 text-gray-600">
                 <div className="flex justify-between">
-                  <span>Order ID:</span>
-                  <span className="font-medium">{orderDetails._id}</span>
+                  <span className="text-[12px] font-bold">Order ID:</span>
+                  <span className="text-[12px] text-gray-900">{orderDetails._id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Placed On:</span>
@@ -191,7 +191,7 @@ const OrderDetails = () => {
                         </h3>
                         <p className="text-gray-500">
                           {" "}
-                          | Color: {item.selectedColorName || "N/A"}
+                           Color: {item.selectedColorName || "N/A"}
                         </p>
                         <p className="text-gray-500">Qty: {item.quantity}</p>
                       </div>

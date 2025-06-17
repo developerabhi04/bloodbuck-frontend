@@ -136,7 +136,7 @@ const Wishlist = () => {
                   <div className="mt-5 flex flex-col gap-2">
                     <button
                       onClick={() => handleMoveToCart(item)}
-                      className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full font-semibold transition-all shadow-md"
+                      className="w-full py-2 bg-gradient-to-r from-gray-500 to-gray-900 hover:from-gray-600 hover:to-gray-700 text-white rounded-full font-semibold transition-all shadow-md"
                     >
                       Move to Cart
                     </button>
@@ -149,7 +149,7 @@ const Wishlist = () => {
                           item.selectedColorName
                         )
                       }
-                      className="w-full py-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-full font-semibold transition-all shadow-md"
+                      className="w-full py-2 bg-gradient-to-r from-red-500 to-red-800 hover:from-red-600 hover:to-red-700 text-white rounded-full font-semibold transition-all shadow-md"
                     >
                       Remove Item
                     </button>

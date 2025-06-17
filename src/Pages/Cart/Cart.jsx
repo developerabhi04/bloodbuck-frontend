@@ -162,7 +162,7 @@ export default function Cart() {
                             </Typography>
                             <Link
                                 to="/products"
-                                className="mt-4 inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md transition"
+                                className="mt-4 inline-block bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-md transition"
                             >
                                 Shop Now
                             </Link>
@@ -207,7 +207,7 @@ export default function Cart() {
                                                                 item.selectedColorName
                                                             )
                                                         }
-                                                        className="text-gray-400 hover:text-red-600"
+                                                        className="text-gray-400 hover:text-gray-600"
                                                     >
                                                         <Delete />
                                                     </button>
@@ -261,7 +261,7 @@ export default function Cart() {
                                                     </button>
                                                 </div>
 
-                                                <p className="mt-4 text-lg font-semibold text-red-600">
+                                                <p className="mt-4 text-lg font-semibold text-gray-600">
                                                     ₹{(item.price * qty).toFixed(2)}
                                                 </p>
                                             </div>
@@ -296,7 +296,7 @@ export default function Cart() {
                                     </div>
                                     <button
                                         onClick={checkout}
-                                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-md transition"
+                                        className="w-full bg-gray-800 hover:bg-gray-900 text-white py-3 rounded-md transition"
                                     >
                                         Proceed to Checkout
                                     </button>

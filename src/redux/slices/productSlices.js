@@ -189,7 +189,7 @@ const productSlices = createSlice({
             keyword: "",
             category: [], // multi-select: array of category names or IDs
             color: [], // e.g., ["Black", "Blue"]
-            priceRange: [0, 1000],
+            priceRange: [0, 100000],
             sort: "",
         },
     },

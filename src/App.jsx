@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { ToastContainer } from "react-toastify";
-import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import MainLayout from "./Components/Layout/MainLayout";
 import "react-toastify/dist/ReactToastify.css"; // ✅ Toastify CSS
 import NotFound from "./Components/Notfound";
@@ -17,9 +16,7 @@ import ContactUs from "./Pages/FooterSections/ContactUS";
 // Lazy load pages
 const Home = lazy(() => import("./Pages/Home/Home"));
 const Products = lazy(() => import("./Pages/Products/Products"));
-const ProductDetails = lazy(() =>
-  import("./Pages/ProductsDetails/ProductDetails")
-);
+const ProductDetails = lazy(() => import("./Pages/ProductsDetails/ProductDetails"));
 const Cart = lazy(() => import("./Pages/Cart/Cart"));
 const Wishlist = lazy(() => import("./Pages/Wishlist/Wishlist"));
 const Checkout = lazy(() => import("./Pages/User/Checkout"));
@@ -32,17 +29,11 @@ const Signup = lazy(() => import("./Pages/User/Signup"));
 
 // Help & Policy
 const FAQ = lazy(() => import("./Pages/FooterSections/FAQ"));
-const AccessibilityStatement = lazy(() =>
-  import("./Pages/FooterSections/AccessibilityStatement")
-);
+const AccessibilityStatement = lazy(() => import("./Pages/FooterSections/AccessibilityStatement"));
 const ServicesPage = lazy(() => import("./Pages/FooterSections/Services"));
 const Ordering = lazy(() => import("./Pages/FooterSections/Ordering"));
-const ShippingPolicy = lazy(() =>
-  import("./Pages/FooterSections/ShippingPolicy")
-);
-const PrivacyPolicy = lazy(() =>
-  import("./Pages/FooterSections/PrivacyPolicy")
-);
+const ShippingPolicy = lazy(() => import("./Pages/FooterSections/ShippingPolicy"));
+const PrivacyPolicy = lazy(() => import("./Pages/FooterSections/PrivacyPolicy"));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import("./Pages/Admin/AdminDashboard"));
@@ -52,38 +43,21 @@ const Transaction = lazy(() => import("./Pages/Admin/Transaction"));
 const BarCharts = lazy(() => import("./Pages/Admin/Charts/BarCharts"));
 const PieCharts = lazy(() => import("./Pages/Admin/Charts/PieCharts"));
 const LineCharts = lazy(() => import("./Pages/Admin/Charts/LineCharts"));
-const ProductManagement = lazy(() =>
-  import("./Pages/Admin/Management/ProductManagement")
-);
+const ProductManagement = lazy(() => import("./Pages/Admin/Management/ProductManagement"));
 
-const TransactionManagement = lazy(() =>
-  import("./Pages/Admin/Management/TransactionManagement")
-);
+const TransactionManagement = lazy(() => import("./Pages/Admin/Management/TransactionManagement"));
 const Banners = lazy(() => import("./Pages/Admin/Banners"));
 const NewProduct = lazy(() => import("./Pages/Admin/Management/NewProduct"));
 const Category = lazy(() => import("./Pages/Admin/Category"));
 
-const SecondBanner = lazy(() =>
-  import("./Pages/Admin/Management/Banner/SecondBanner")
-);
-const ThirdBanner = lazy(() =>
-  import("./Pages/Admin/Management/Banner/ThirdBanner")
-);
-const CompanyInfo = lazy(() =>
-  import("./Pages/Admin/Management/Company/CompanyInfo")
-);
+const SecondBanner = lazy(() => import("./Pages/Admin/Management/Banner/SecondBanner"));
+const ThirdBanner = lazy(() => import("./Pages/Admin/Management/Banner/ThirdBanner"));
+const CompanyInfo = lazy(() => import("./Pages/Admin/Management/Company/CompanyInfo"));
 const Coupons = lazy(() => import("./Pages/Admin/Coupon"));
 const NewCoupon = lazy(() => import("./Pages/Admin/Management/NewCoupon"));
-const CouponManagement = lazy(() =>
-  import("./Pages/Admin/Management/CouponManagement")
-);
+const CouponManagement = lazy(() => import("./Pages/Admin/Management/CouponManagement"));
 
-// PayPal config
-const initialOptions = {
-  "client-id":
-    "AWBqUFZvUwKo5MnU57O7qeZka0Yb-PEEOrSOIfliDRrCoIJ1M5Z-OyKZmdtOYh7R9B3Km1ThtgYUTins", // Replace with actual client ID
-  currency: "USD",
-};
+
 
 const App = () => {
   return (
@@ -161,9 +135,7 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <MainLayout>
-                  <PayPalScriptProvider options={initialOptions}>
-                    <Checkout />
-                  </PayPalScriptProvider>
+                  <Checkout />
                 </MainLayout>
               </ProtectedRoute>
             }
@@ -259,7 +231,7 @@ const App = () => {
             }
           />
 
-           <Route
+          <Route
             path="/contact-us"
             element={
               <MainLayout>

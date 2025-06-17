@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Add, Remove, Close, Tune, Star } from "@mui/icons-material";
+import { Add, Remove, Close, Tune, Star, Home } from "@mui/icons-material";
 import { Skeleton, Stack, Drawer, IconButton, Breadcrumbs, Link as MuiLink } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../../redux/slices/productSlices";
 import { fetchCategories } from "../../redux/slices/categorySlices";
-import { useSearchParams, Link as RouterLink } from "react-router-dom";
+import { useSearchParams, Link as RouterLink, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import productBanner from "../../assets/product-banner.webp";
 import ProductCard from "./ProductCard";
@@ -24,7 +24,7 @@ const Products = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { products, loading: prodLoading } = useSelector((state) => state.products);
-  
+
   const { categories, loading: catLoading } = useSelector((state) => state.categories);
 
   const { colorOptions } = useMemo(() => {
@@ -193,15 +193,28 @@ const Products = () => {
       </div>
 
       <section className="bg-white pt-10 pb-16 px-4 md:px-8 min-h-screen">
+
+
+
         <div className="max-w-7xl mx-auto">
-          <div className="mb-4">
+
+          <div className="max-w-7xl  mx-auto mb-10">
+            <nav className="text-xs sm:text-sm text-gray-600 bg-white px-4 py-3  flex flex-wrap gap-1 items-center">
+              <Home fontSize="small" className="text-gray-500" />
+              <Link to="/" className="hover:text-gray-900">Home</Link>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-800 font-medium  truncate max-w-[150px] sm:max-w-none">All Products</span>
+            </nav>
+          </div>
+          {/* <div className="mb-4">
             <Breadcrumbs aria-label="breadcrumb">
               <MuiLink component={RouterLink} underline="hover" color="inherit" to="/">
+                <Home fontSize="small" className="text-gray-500" />
                 Home
               </MuiLink>
               <span className="text-gray-500">Products</span>
             </Breadcrumbs>
-          </div>
+          </div> */}
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-3">

@@ -28,9 +28,8 @@ const ProductCard = ({ product }) => {
   const { user } = useSelector((s) => s.user);
   const { wishlistItems } = useSelector((s) => s.wishlist);
 
-  const defaultImage =
-    product?.colors?.[0]?.photos?.[0]?.url ||
-    "https://via.placeholder.com/300x300.png?text=No+Image";
+  const defaultImage = product?.colors?.[0]?.photos?.[0]?.url || "https://via.placeholder.com/300x300.png?text=No+Image";
+
 
   const [currentImage, setCurrentImage] = useState(defaultImage);
 
@@ -119,13 +118,13 @@ const ProductCard = ({ product }) => {
             {product.colors.map((color, idx) => (
               <div key={idx} className="px-1">
                 <div
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-300 overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-110"
+                  className="w-8 h-8 sm:w-10 mt-2 sm:h-10 rounded-full border border-gray-300 overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-110"
                   onMouseEnter={() => handleVariantHover(color)}
                 >
                   <img
                     src={color.colorImage?.url || color.photos?.[0]?.url || defaultImage}
                     alt={color.colorName || `Variant ${idx + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-all duration-500"
                   />
                 </div>
               </div>

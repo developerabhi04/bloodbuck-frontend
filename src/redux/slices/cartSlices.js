@@ -8,10 +8,7 @@ export const clearOrderedProducts = createAsyncThunk("cart/clearOrderedProducts"
         const token = localStorage.getItem("token");
         const response = await axios.post(`${server}/cart/clear-ordered/${userId}`, { orderedItems },
             {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+                headers: {Authorization: `Bearer ${token}`},
             }
         );
         if (response.data.success) {

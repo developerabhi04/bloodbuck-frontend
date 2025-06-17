@@ -42,8 +42,8 @@ function ReviewItem({ review }) {
     <div className="bg-white p-6 rounded-lg shadow mb-6 border">
       <div className="flex items-center mb-3">
         <img
-          src={review.user?.avatar?.[0]?.url || "/default-user.png"}
-          alt={review.user?.name || "User"}
+          src={review?.user?.avatar[0]?.url}
+          alt={review?.user?.name || "User"}
           className="w-12 h-12 rounded-full object-cover border-2 border-gray-600 mr-4"
         />
         <div>
@@ -137,6 +137,7 @@ export default function ProductDetails() {
       .catch((e) => toast.error(e.message));
   };
 
+
   const addWish = () => {
     if (!user) return toast.error("Please log in first!");
     if (!selectedColor) return toast.error("Please select a color!");
@@ -212,7 +213,6 @@ export default function ProductDetails() {
           {/* Image Section */}
 
           <div>
-
             <div
               className="relative rounded-lg overflow-hidden shadow-lg group"
               onMouseMove={(e) => handleZoom(e)}
@@ -272,8 +272,8 @@ export default function ProductDetails() {
           <div className="space-y-5">
             <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
             <div className="flex items-center space-x-2 text-sm">
-              <Rating value={product.ratings} readOnly size="small" />
-              <span className="text-gray-600">({product.numOfReviews} reviews)</span>
+              <Rating value={product.averageRating} readOnly size="small" />
+              <span className="text-gray-600">({product.reviews.length} reviews)</span>
             </div>
             <p className="text-gray-700 text-2xl font-semibold">₹{product.price.toFixed(2)}</p>
 
@@ -288,6 +288,7 @@ export default function ProductDetails() {
                   </span>
                 )}
               </p>
+
               <div className="flex space-x-6">
                 {product.colors.map((c, idx) => (
                   <div key={idx} className="flex flex-col items-center">
@@ -298,8 +299,7 @@ export default function ProductDetails() {
                       }}
                       className={`w-10 h-10 rounded-full border-2 overflow-hidden transition-transform  ${selectedColor === c.colorName
                         ? "border-blue-600 scale-110"
-                        : "border-gray-300"}
-          `}
+                        : "border-gray-300"}`}
                     >
                       <img
                         src={c.colorImage?.url || c.photos?.[0]?.url}

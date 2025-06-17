@@ -11,7 +11,7 @@ import couponReducer from "./slices/couponSlices.js";
 import shopCartReducer from "./slices/cartSlices.js";
 import wishlistReducer from "./slices/wishlistSlices.js";
 import paymentReducer from "./slices/paymentSlices.js";
-import reviewReducer from "./slices/paymentSlices.js";
+import reviewReducer from "./slices/reviewSlices.js";
 import dashboardReducer from "./slices/AdminChartSlices.js";
 import bannerEventReducer from "./slices/BannerEventSlices.js";
 
@@ -34,7 +34,7 @@ const store = configureStore({
         review: reviewReducer,
         dashboard: dashboardReducer,
         bannerEvent: bannerEventReducer,
-       
+
     },
 });
 
