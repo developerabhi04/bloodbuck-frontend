@@ -95,7 +95,7 @@ const AdminSidebar = () => {
 const NavSection = ({ title, links, collapsed, activePath }) => (
   <div className="mt-6">
     {!collapsed && (
-      <h6 className="px-4 mb-2 text-xs font-semibold uppercase text-gray-500">
+      <h6 className="px-4 mb-2 text-sm font-semibold uppercase text-gray-500">
         {title}
       </h6>
     )}

@@ -120,8 +120,8 @@ export default function TransactionManagement() {
                   <div className="flex-1 grid gap-2">
                     <p className="text-lg font-medium text-gray-800">{item.name}</p>
                     <p className="text-gray-600">
-                      ${item.price} × {item.quantity} ={' '}
-                      <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                      ₹{item.price} × {item.quantity} ={' '}
+                      <span className="font-semibold">₹{(item.price * item.quantity).toFixed(2)}</span>
                     </p>
                     <p className="text-gray-600">Quantity: {item.quantity}</p>
                     {item.selectedSize && <p className="text-gray-600">Size: {item.selectedSize}</p>}
@@ -159,10 +159,10 @@ export default function TransactionManagement() {
                   content: (
                     <>
                       <p>Method: {paymentMethod}</p>
-                      <p>Subtotal: ${subtotal.toFixed(2)}</p>
-                      <p>Tax: ${tax.toFixed(2)}</p>
-                      <p>Discount: ${discountAmount.toFixed(2)}</p>
-                      <p className="font-bold">Total: ${total.toFixed(2)}</p>
+                      <p>Subtotal: ₹{subtotal.toFixed(2)}</p>
+                      <p>Tax: ₹{tax.toFixed(2)}</p>
+                      <p>Discount: ₹{discountAmount.toFixed(2)}</p>
+                      <p className="font-bold">Total: ₹{total.toFixed(2)}</p>
                     </>
                   )
                 },

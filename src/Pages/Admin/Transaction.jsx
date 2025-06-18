@@ -116,10 +116,10 @@ export default function Transaction() {
                         {order.user?.name || 'Guest'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-800">
-                        ${order.total}
+                        ₹{order.total}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-800">
-                        ${order.discountAmount}
+                        ₹{order.discountAmount}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-800">{qty}</td>
                       <td className="px-6 py-4 whitespace-nowrap">

@@ -27,8 +27,8 @@ const Profile = () => {
     () => [
       { id: "profile", label: "Profile", Icon: PersonPin },
       { id: "address", label: "Address", Icon: Home },
-      { id: "changePassword", label: "Change Password", Icon: LockOpen },
-      { id: "forgotPassword", label: "Reset Password", Icon: LockReset },
+      // { id: "changePassword", label: "Change Password", Icon: LockOpen },
+      // { id: "forgotPassword", label: "Reset Password", Icon: LockReset },
     ],
     []
   );
@@ -55,10 +55,10 @@ const Profile = () => {
   return (
     <>
       <Helmet>
-        <title>My Profile | Your Store</title>
+        <title>My Profile | Bloodbuck</title>
         <meta
           name="description"
-          content="Manage your account details and preferences at Your Store."
+          content="Manage your account details and preferences at Bloodbuck."
         />
         <link rel="canonical" href={window.location.href} />
       </Helmet>
@@ -210,7 +210,7 @@ const Profile = () => {
                   </form>
                 )}
 
-                {activeSection === "changePassword" && (
+                {/* {activeSection === "changePassword" && (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <h3 className="text-xl font-semibold text-gray-800">
                       Change Password
@@ -275,7 +275,7 @@ const Profile = () => {
                       Send Reset Link
                     </button>
                   </form>
-                )}
+                )} */}
               </div>
             </div>
           </div>

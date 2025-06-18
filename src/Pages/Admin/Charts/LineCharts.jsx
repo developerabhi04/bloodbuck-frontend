@@ -58,7 +58,7 @@ const LineCharts = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-lg font-medium text-gray-700 mb-4">Total Products (USD)</h2>
+              <h2 className="text-lg font-medium text-gray-700 mb-4">Total Products (₹)</h2>
               <LineChart
                 data={lineCharts.products || []}
                 label="Products"

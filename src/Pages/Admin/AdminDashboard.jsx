@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { BarChart } from '../../components/Admin/Chart';
 import DashboardTable from '../../components/Admin/DashboardTable';
 
-
 import {
     fetchDashboardStats,
     fetchPieCharts,
@@ -13,7 +12,6 @@ import {
     fetchLineCharts,
 } from '../../redux/slices/AdminChartSlices';
 import AdminSidebar from '../../Components/Admin/AdminSidebar';
-// import Loadertwo from '../../components/Loader/Loadertwo';
 
 const gradientMap = {
     revenue: 'from-blue-500 to-indigo-600',
@@ -35,28 +33,24 @@ const AdminDashboard = () => {
         dispatch(fetchLineCharts());
     }, [dispatch]);
 
-
-    // track sidebar collapse
     const [collapsed, setCollapsed] = useState(() => {
         const saved = localStorage.getItem('sidebarCollapsed');
         return saved === null ? window.innerWidth < 1024 : JSON.parse(saved);
     });
 
     useEffect(() => {
-        // update on toggle
-        const onToggle = e => setCollapsed(e.detail);
+        const onToggle = (e) => setCollapsed(e.detail);
         window.addEventListener('sidebar-collapsed', onToggle);
         return () => window.removeEventListener('sidebar-collapsed', onToggle);
     }, []);
 
-    // if (loading) return <Loadertwo />;
     if (error) return <p className="text-red-600 p-4">{error}</p>;
 
     const count = stats?.count ?? {};
     const change = stats?.changePercent ?? {};
 
     const cards = [
-        { key: 'revenue', label: 'Revenue', value: count.revenue ?? 0, prefix: '$' },
+        { key: 'revenue', label: 'Revenue', value: count.revenue ?? 0, prefix: '₹' },
         { key: 'users', label: 'Users', value: count.user ?? 0 },
         { key: 'orders', label: 'Transactions', value: count.order ?? 0 },
         { key: 'products', label: 'Products', value: count.product ?? 0 },
@@ -75,8 +69,6 @@ const AdminDashboard = () => {
                     (collapsed ? 'lg:pl-[100px]' : 'lg:pl-[260px]')
                 }
             >
-
-                {/* Stats */}
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                     {cards.map(({ key, label, value, prefix }) => (
                         <StatsCard
@@ -90,7 +82,6 @@ const AdminDashboard = () => {
                     ))}
                 </div>
 
-                {/* Charts */}
                 <div className="mt-8 grid gap-8 lg:grid-cols-3">
                     <ChartPanel title="Revenue vs Orders" cols={2}>
                         <BarChart
@@ -113,7 +104,6 @@ const AdminDashboard = () => {
                     </ChartPanel>
                 </div>
 
-                {/* Transactions Table */}
                 <div className="mt-8 bg-white shadow-xl rounded-2xl p-6">
                     <h3 className="text-2xl font-semibold mb-4">Recent Transactions</h3>
                     <DashboardTable />
@@ -124,7 +114,9 @@ const AdminDashboard = () => {
 };
 
 const StatsCard = ({ label, value, prefix = '', percent, gradient }) => {
-    const up = percent >= 0;
+    // Cap percent between -100 and 100 to avoid overly large values
+    const capped = Math.sign(percent) * Math.min(Math.abs(percent), 100);
+    const up = capped >= 0;
     return (
         <motion.div
             whileHover={{ scale: 1.03 }}
@@ -133,10 +125,11 @@ const StatsCard = ({ label, value, prefix = '', percent, gradient }) => {
             <div className="flex justify-between items-center">
                 <h4 className="text-lg font-medium">{label}</h4>
                 <span
-                    className={`inline-flex items-center px-2 py-1 text-sm font-semibold rounded-full ${up ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
-                        }`}
+                    className={`inline-flex items-center px-2 py-1 text-sm font-semibold rounded-full ${
+                        up ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+                    }`}
                 >
-                    {up ? <HiTrendingUp /> : <HiTrendingDown />} {Math.abs(percent)}%
+                    {up ? <HiTrendingUp /> : <HiTrendingDown />} {Math.abs(capped)}%
                 </span>
             </div>
             <p className="mt-4 text-3xl font-bold">

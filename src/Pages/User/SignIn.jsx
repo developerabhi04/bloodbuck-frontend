@@ -183,12 +183,12 @@ export default function SignIn() {
                                     />
                                     <span className="ml-2 text-sm text-gray-600">Remember me</span>
                                 </label>
-                                <Link
+                                {/* <Link
                                     to="/forgot-password"
                                     className="text-sm text-indigo-600 hover:text-indigo-500"
                                 >
                                     Forgot password?
-                                </Link>
+                                </Link> */}
                             </div>
 
                             <motion.button

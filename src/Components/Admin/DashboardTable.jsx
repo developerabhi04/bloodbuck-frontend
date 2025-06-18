@@ -28,7 +28,7 @@ const DashboardTable = () => {
             <td className="px-4 py-3 text-sm text-gray-700">{o._id.slice(-6)}</td>
             <td className="px-4 py-3 text-sm text-gray-700">{o.user?.name || "Guest"}</td>
             <td className="px-4 py-3 text-sm text-gray-700">{qty}</td>
-            <td className="px-4 py-3 text-sm font-medium">${o.total.toFixed(2)}</td>
+            <td className="px-4 py-3 text-sm font-medium">₹{o.total.toFixed(2)}</td>
             <td className="px-4 py-3">
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
                 {o.status}

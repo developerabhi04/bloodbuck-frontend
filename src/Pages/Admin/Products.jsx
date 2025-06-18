@@ -127,7 +127,7 @@ export default function Products() {
                         {product.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-800">
-                        ${product.price.toFixed(2)}
+                        ₹{product.price.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-800">
                         {totalStock}

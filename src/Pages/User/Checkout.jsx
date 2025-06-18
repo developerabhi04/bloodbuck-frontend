@@ -121,7 +121,7 @@ export default function Checkout() {
       if (!sdkReady) return toast.error("Razorpay SDK failed to load");
 
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_REACT_APP_RAZORPAY_KEY_ID,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         order_id: razorpayOrder.id,
@@ -240,7 +240,7 @@ export default function Checkout() {
               <h2 className="text-xl font-semibold">Order Summary</h2>
               <div className="space-y-4 max-h-64 overflow-y-auto">
                 {cartItems.map((item) => (
-                  <div key={`${item.productId}_${item.selectedColorName}`} className="flex items-center space-x-4">
+                  <div key={`₹{item.productId}_₹{item.selectedColorName}`} className="flex items-center space-x-4">
                     <img src={item.imageUrl} alt={item.name} className="w-16 h-16 object-cover rounded" />
                     <div className="flex-1">
                       <div className="flex justify-between">

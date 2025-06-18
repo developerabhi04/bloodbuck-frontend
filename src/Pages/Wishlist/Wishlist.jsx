@@ -107,7 +107,7 @@ const Wishlist = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {wishlistItems.map((item) => (
                 <div
-                  key={`${item.productId}-${item.selectedSize}-${item.selectedSeamSize}-${item.selectedColorName}`}
+                  key={`₹{item.productId}-₹{item.selectedColorName}`}
                   className="group bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all p-6 flex flex-col relative overflow-hidden border border-gray-200"
                 >
                   <div
@@ -120,15 +120,13 @@ const Wishlist = () => {
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-md">
-                      ${item.price}.00
+                      ₹{item.price}.00
                     </div>
                   </div>
 
                   <div className="flex-1 mt-4 space-y-2">
                     <h3 className="text-xl font-semibold text-gray-900 truncate">{item.name}</h3>
                     <div className="text-sm text-gray-500 space-y-1">
-                      {item.selectedSize && <p>Top Size: {item.selectedSize}</p>}
-                      {item.selectedSeamSize && <p>Bottom Size: {item.selectedSeamSize}</p>}
                       {item.selectedColorName && <p>Color: {item.selectedColorName}</p>}
                     </div>
                   </div>
@@ -144,8 +142,6 @@ const Wishlist = () => {
                       onClick={() =>
                         handleRemoveFromWishlist(
                           item.productId,
-                          item.selectedSize,
-                          item.selectedSeamSize,
                           item.selectedColorName
                         )
                       }
